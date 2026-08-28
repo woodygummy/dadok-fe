@@ -17,6 +17,39 @@ function formatAddedAt(value: string) {
   })
 }
 
+function parseAuthorCredits(raw: string) {
+  const cleaned = raw.trim()
+  if (!cleaned || cleaned === "저자 미상") return []
+
+  const chunks = cleaned
+    .split(/\s*,\s*/)
+    .map((part) => part.trim())
+    .filter(Boolean)
+  const credits: { role: string; name: string }[] = []
+  let pendingNames: string[] = []
+
+  for (const chunk of chunks) {
+    const match = chunk.match(/^(.*?)\s*\(([^)]+)\)\s*$/)
+    if (match) {
+      const name = match[1].trim()
+      const role = match[2].trim()
+      const names = [...pendingNames, name].filter(Boolean)
+      pendingNames = []
+      for (const person of names) {
+        credits.push({ role, name: person })
+      }
+    } else {
+      pendingNames.push(chunk)
+    }
+  }
+
+  for (const name of pendingNames) {
+    credits.push({ role: "지은이", name })
+  }
+
+  return credits
+}
+
 export function BookDetailDialog({
   book,
   open,
@@ -80,6 +113,7 @@ export function BookDetailDialog({
 
   const title = detail?.title || book.title
   const authors = detail?.authors || book.authors
+  const credits = parseAuthorCredits(authors)
   const thumbnail = detail?.thumbnail || book.thumbnail
   const addedAt = formatAddedAt(book.addedAt)
 
@@ -95,70 +129,40 @@ export function BookDetailDialog({
         role="dialog"
         aria-modal="true"
         aria-labelledby="book-detail-title"
-        className="relative z-10 grid max-h-[min(36rem,calc(100vh-4rem))] w-full max-w-md gap-4 overflow-y-auto rounded-[28px] border border-[rgba(92,74,58,0.18)] bg-[var(--card)] p-5 text-sm text-[var(--card-foreground)] shadow-[0_18px_40px_rgba(59,36,20,0.18)]"
+        className="relative z-10 grid max-h-[min(36rem,calc(100vh-4rem))] w-full max-w-md gap-4 overflow-y-auto rounded-[28px] border border-[rgba(92,74,58,0.18)] bg-[var(--card)] p-5 text-left text-sm text-[var(--card-foreground)] shadow-[0_18px_40px_rgba(59,36,20,0.18)]"
       >
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <h2
-              id="book-detail-title"
-              className="font-serif text-[22px] leading-snug font-semibold tracking-tight"
-            >
-              {title}
-            </h2>
-            <p className="mt-1 text-sm text-muted-foreground">{authors}</p>
-          </div>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon-sm"
-            className="shrink-0 rounded-full"
-            aria-label="닫기"
-            onClick={() => onOpenChange(false)}
-          >
-            ✕
-          </Button>
-        </div>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-sm"
+          className="absolute top-3 right-3 z-10 rounded-full"
+          aria-label="닫기"
+          onClick={() => onOpenChange(false)}
+        >
+          ✕
+        </Button>
 
-        <div className="flex gap-4">
+        <div className="flex justify-center pt-1">
           {thumbnail ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={thumbnail}
               alt=""
-              className="h-40 w-[6.75rem] shrink-0 rounded-xl object-cover shadow-[0_10px_24px_rgba(59,36,20,0.16)]"
+              className="h-52 w-[8.75rem] rounded-xl object-cover shadow-[0_10px_24px_rgba(59,36,20,0.16)]"
             />
           ) : (
-            <span className="flex h-40 w-[6.75rem] shrink-0 items-end rounded-xl bg-[var(--wood)] px-2 pb-2 text-[11px] leading-tight text-[#FFF8F0]">
+            <span className="flex h-52 w-[8.75rem] items-end rounded-xl bg-[var(--wood)] px-2 pb-2 text-[11px] leading-tight text-[#FFF8F0]">
               {title}
             </span>
           )}
-          <dl className="min-w-0 flex-1 space-y-2 text-sm">
-            {detail?.publisher ? (
-              <div>
-                <dt className="text-xs text-muted-foreground">출판사</dt>
-                <dd>{detail.publisher}</dd>
-              </div>
-            ) : null}
-            {detail?.pubDate ? (
-              <div>
-                <dt className="text-xs text-muted-foreground">출간</dt>
-                <dd>{detail.pubDate}</dd>
-              </div>
-            ) : null}
-            {detail?.category ? (
-              <div>
-                <dt className="text-xs text-muted-foreground">분류</dt>
-                <dd className="leading-snug">{detail.category}</dd>
-              </div>
-            ) : null}
-            {addedAt ? (
-              <div>
-                <dt className="text-xs text-muted-foreground">책장에 꽂은 날</dt>
-                <dd>{addedAt}</dd>
-              </div>
-            ) : null}
-          </dl>
         </div>
+
+        <h2
+          id="book-detail-title"
+          className="pr-8 font-serif text-[22px] leading-snug font-semibold tracking-tight"
+        >
+          {title}
+        </h2>
 
         {loading ? (
           <p className="text-sm text-muted-foreground">소개를 불러오는 중…</p>
@@ -169,6 +173,19 @@ export function BookDetailDialog({
         ) : (
           <p className="text-sm text-muted-foreground">소개글이 없습니다.</p>
         )}
+
+        <ul className="space-y-0.5 text-right text-sm text-muted-foreground">
+          {credits.length > 0
+            ? credits.map((credit) => (
+                <li key={`${credit.role}-${credit.name}`}>
+                  {credit.role} {credit.name}
+                </li>
+              ))
+            : authors
+              ? <li>{authors}</li>
+              : null}
+          {addedAt ? <li>책장에 꽂은 날 {addedAt}</li> : null}
+        </ul>
 
         <Button
           type="button"
