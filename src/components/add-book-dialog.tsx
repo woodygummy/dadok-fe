@@ -1,75 +1,83 @@
 "use client"
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import { Textarea } from "@/components/ui/textarea"
+import { searchBooks, type SearchBook } from "@/lib/api"
 import { useDadok } from "@/lib/store"
-import type { BookStatus } from "@/lib/types"
+import { Plus } from "lucide-react"
 
 export function AddBookDialog({
-  triggerLabel = "책 넣기",
+  onAdded,
 }: {
-  triggerLabel?: string
+  onAdded?: (bookId: string) => void
 }) {
-  const router = useRouter()
-  const { addBook } = useDadok()
+  const { books, addBook } = useDadok()
   const [open, setOpen] = useState(false)
-  const [title, setTitle] = useState("")
-  const [author, setAuthor] = useState("")
-  const [totalPages, setTotalPages] = useState("320")
-  const [status, setStatus] = useState<BookStatus>("wishlist")
-  const [note, setNote] = useState("")
+  const [query, setQuery] = useState("")
+  const [results, setResults] = useState<SearchBook[]>([])
+  const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
+  const [message, setMessage] = useState("")
+
+  useEffect(() => {
+    if (!open) return
+    const q = query.trim()
+    if (!q) {
+      setResults([])
+      setError("")
+      setLoading(false)
+      return
+    }
+
+    const timer = window.setTimeout(async () => {
+      setLoading(true)
+      setError("")
+      try {
+        const next = await searchBooks(q)
+        setResults(next)
+        if (next.length === 0) setError("검색 결과가 없습니다.")
+      } catch {
+        setResults([])
+        setError("Google Books 검색에 실패했습니다.")
+      } finally {
+        setLoading(false)
+      }
+    }, 350)
+
+    return () => window.clearTimeout(timer)
+  }, [query, open])
 
   function reset() {
-    setTitle("")
-    setAuthor("")
-    setTotalPages("320")
-    setStatus("wishlist")
-    setNote("")
+    setQuery("")
+    setResults([])
     setError("")
+    setMessage("")
+    setLoading(false)
   }
 
-  function onSubmit(event: React.FormEvent) {
-    event.preventDefault()
-    if (!title.trim()) {
-      setError("책 제목을 적어 주세요.")
-      return
-    }
-    const pages = Number(totalPages)
-    if (!Number.isFinite(pages) || pages < 1) {
-      setError("쪽 수는 1 이상이어야 합니다.")
-      return
-    }
-    const book = addBook({
-      title,
-      author,
-      totalPages: Math.round(pages),
-      status,
-      note,
+  function handleAdd(item: SearchBook) {
+    const added = addBook({
+      googleId: item.id,
+      title: item.title,
+      authors: item.authors,
+      thumbnail: item.thumbnail,
     })
+    if (!added) {
+      setMessage("이미 책장에 있는 책입니다.")
+      return
+    }
+    onAdded?.(added.id)
     reset()
     setOpen(false)
-    router.push(`/books/${book.id}`)
   }
 
   return (
@@ -80,76 +88,75 @@ export function AddBookDialog({
         if (!next) reset()
       }}
     >
-      <DialogTrigger render={<Button />}>{triggerLabel}</DialogTrigger>
-      <DialogContent>
-        <form onSubmit={onSubmit} className="grid gap-4">
-          <DialogHeader>
-            <DialogTitle>서재에 책 넣기</DialogTitle>
-            <DialogDescription>
-              백엔드가 붙기 전이라 이 기기의 브라우저에만 저장됩니다.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-2">
-            <Label htmlFor="book-title">제목</Label>
-            <Input
-              id="book-title"
-              value={title}
-              onChange={(event) => setTitle(event.target.value)}
-              placeholder="예: 데미안"
-            />
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="book-author">지은이</Label>
-            <Input
-              id="book-author"
-              value={author}
-              onChange={(event) => setAuthor(event.target.value)}
-              placeholder="예: 헤르만 헤세"
-            />
-          </div>
-          <div className="grid gap-2 sm:grid-cols-2 sm:gap-3">
-            <div className="grid gap-2">
-              <Label htmlFor="book-pages">전체 쪽 수</Label>
-              <Input
-                id="book-pages"
-                inputMode="numeric"
-                value={totalPages}
-                onChange={(event) => setTotalPages(event.target.value)}
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label>상태</Label>
-              <Select
-                value={status}
-                onValueChange={(value) => {
-                  if (value) setStatus(value as BookStatus)
-                }}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="wishlist">읽고 싶음</SelectItem>
-                  <SelectItem value="reading">읽는 중</SelectItem>
-                  <SelectItem value="finished">다 읽음</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="book-note">메모</Label>
-            <Textarea
-              id="book-note"
-              value={note}
-              onChange={(event) => setNote(event.target.value)}
-              placeholder="왜 읽고 싶은지, 언제 읽을지"
-            />
-          </div>
-          {error ? <p className="text-sm text-destructive">{error}</p> : null}
-          <DialogFooter>
-            <Button type="submit">서재에 넣기</Button>
-          </DialogFooter>
-        </form>
+      <DialogTrigger
+        render={
+          <Button
+            size="icon"
+            variant="ghost"
+            className="size-10 rounded-full"
+            aria-label="책 추가"
+          />
+        }
+      >
+        <Plus className="size-6" />
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>책 검색해서 꽂기</DialogTitle>
+          <DialogDescription>
+            Google Books에서 제목이나 저자를 검색한 뒤 책장에 넣습니다.
+          </DialogDescription>
+        </DialogHeader>
+        <Input
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          placeholder="책 제목 또는 저자"
+          autoFocus
+        />
+        {loading ? (
+          <p className="text-sm text-muted-foreground">검색 중…</p>
+        ) : null}
+        {error ? <p className="text-sm text-destructive">{error}</p> : null}
+        {message ? <p className="text-sm text-muted-foreground">{message}</p> : null}
+        <ul className="max-h-72 space-y-2 overflow-y-auto">
+          {results.map((item) => {
+            const already = books.some((book) => book.googleId === item.id)
+            return (
+              <li key={item.id}>
+                <button
+                  type="button"
+                  onClick={() => handleAdd(item)}
+                  disabled={already}
+                  className="flex w-full items-center gap-3 rounded-xl bg-muted/60 p-2 text-left disabled:opacity-50"
+                >
+                  {item.thumbnail ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={item.thumbnail}
+                      alt=""
+                      className="h-14 w-10 rounded object-cover"
+                    />
+                  ) : (
+                    <span className="h-14 w-10 rounded bg-[var(--wood)]" />
+                  )}
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-sm font-medium">
+                      {item.title}
+                    </span>
+                    <span className="block truncate text-xs text-muted-foreground">
+                      {item.authors}
+                    </span>
+                    {already ? (
+                      <span className="text-xs text-muted-foreground">
+                        이미 꽂혀 있음
+                      </span>
+                    ) : null}
+                  </span>
+                </button>
+              </li>
+            )
+          })}
+        </ul>
       </DialogContent>
     </Dialog>
   )

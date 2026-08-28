@@ -1,20 +1,31 @@
-import { createSeedState, SEED_STATE } from "@/lib/seed"
-import type { DadokState } from "@/lib/types"
+import { DEFAULT_PROFILE, type DadokState, type ThemeName } from "@/lib/types"
 
-export const STORAGE_KEY = "dadok-fe:v1"
+export const STORAGE_KEY = "dadok-fe:v2"
+
+export function emptyState(): DadokState {
+  return {
+    books: [],
+    profile: { ...DEFAULT_PROFILE },
+  }
+}
 
 export function loadState(): DadokState {
-  if (typeof window === "undefined") return SEED_STATE
+  if (typeof window === "undefined") return emptyState()
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY)
-    if (!raw) return createSeedState()
-    const parsed = JSON.parse(raw) as DadokState
-    if (!Array.isArray(parsed.books) || !Array.isArray(parsed.sessions)) {
-      return createSeedState()
+    if (!raw) return emptyState()
+    const parsed = JSON.parse(raw) as Partial<DadokState>
+    const theme = parsed.profile?.theme
+    return {
+      books: Array.isArray(parsed.books) ? parsed.books : [],
+      profile: {
+        nickname: parsed.profile?.nickname?.trim() || DEFAULT_PROFILE.nickname,
+        email: parsed.profile?.email?.trim() || DEFAULT_PROFILE.email,
+        theme: isTheme(theme) ? theme : DEFAULT_PROFILE.theme,
+      },
     }
-    return parsed
   } catch {
-    return createSeedState()
+    return emptyState()
   }
 }
 
@@ -22,31 +33,10 @@ export function saveState(state: DadokState) {
   window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
 }
 
-export function todayKey(date = new Date()) {
-  const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, "0")
-  const day = String(date.getDate()).padStart(2, "0")
-  return `${year}-${month}-${day}`
-}
-
-export function dayKeyFromIso(iso: string) {
-  return todayKey(new Date(iso))
-}
-
-export function formatDateTime(iso: string) {
-  return new Date(iso).toLocaleString("ko-KR", {
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  })
-}
-
-export function progressPercent(current: number, total: number) {
-  if (total <= 0) return 0
-  return Math.min(100, Math.round((current / total) * 100))
-}
-
 export function createId(prefix: string) {
   return `${prefix}-${Math.random().toString(36).slice(2, 8)}-${Date.now().toString(36)}`
+}
+
+function isTheme(value: unknown): value is ThemeName {
+  return value === "white" || value === "dark" || value === "wood"
 }
