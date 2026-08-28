@@ -98,10 +98,14 @@ export function Bookshelf({
                       highlight={highlightId === book.id}
                       showTitle={showTitles}
                       width={bookWidth}
-                      onSelect={() => {
-                        onSelectBook?.(book)
-                        setSelected(book)
-                      }}
+                      onSelect={
+                        compact
+                          ? undefined
+                          : () => {
+                              onSelectBook?.(book)
+                              setSelected(book)
+                            }
+                      }
                     />
                   ))
                 )}
@@ -111,13 +115,15 @@ export function Bookshelf({
           )
         })}
       </div>
-      <BookDetailDialog
-        book={selected}
-        open={selected !== null}
-        onOpenChange={(next) => {
-          if (!next) setSelected(null)
-        }}
-      />
+      {!compact ? (
+        <BookDetailDialog
+          book={selected}
+          open={selected !== null}
+          onOpenChange={(next) => {
+            if (!next) setSelected(null)
+          }}
+        />
+      ) : null}
     </div>
   )
 }
