@@ -41,10 +41,6 @@ export default function MePage() {
 
   return (
     <div className="space-y-6">
-      <header>
-        <h1 className="text-2xl font-semibold tracking-tight">마이페이지</h1>
-      </header>
-
       <div className="flex flex-col items-center gap-2">
         <div className="relative size-24">
           <div className="size-full overflow-hidden rounded-full border-4 border-[var(--wood)] bg-[var(--niche)] shadow-[0_10px_24px_rgba(59,36,20,0.16)]">

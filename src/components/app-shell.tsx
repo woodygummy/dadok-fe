@@ -16,7 +16,21 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex min-h-full flex-col">
-      <main className="mx-auto w-full max-w-md flex-1 px-4 pb-24 pt-5">
+      <header className="w-full">
+        <div className="mx-auto flex w-full max-w-md items-center justify-start px-4 pt-3">
+          <Link href="/" aria-label="다독 홈" className="block">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/dadok-logo.png"
+              alt="DaDok"
+              width={127}
+              height={98}
+              className="h-10 w-auto dark:invert"
+            />
+          </Link>
+        </div>
+      </header>
+      <main className="mx-auto w-full max-w-md flex-1 px-4 pb-24 pt-3">
         {children}
       </main>
       <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-[rgba(92,74,58,0.16)] bg-background/95 backdrop-blur">
@@ -31,13 +45,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <Link
                 key={item.href}
                 href={item.href}
+                aria-label={item.label}
                 className={cn(
-                  "flex flex-col items-center gap-1 py-3 text-[11px]",
+                  "flex flex-col items-center py-3",
                   active ? "text-primary" : "text-muted-foreground"
                 )}
               >
                 <Icon className="size-5" />
-                {item.label}
               </Link>
             )
           })}

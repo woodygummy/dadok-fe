@@ -14,8 +14,7 @@ export default function ShelfPage() {
 
   return (
     <div className="space-y-5">
-      <header className="flex items-start justify-between gap-3">
-        <h1 className="text-2xl font-semibold tracking-tight">나만의 책장</h1>
+      <header className="flex justify-end">
         <AddBookDialog
           onAdded={(id) => {
             setHighlightId(id)
