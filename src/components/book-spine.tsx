@@ -3,12 +3,28 @@
 import { useCoverColor } from "@/lib/use-cover-color"
 import { cn } from "@/lib/utils"
 
+function isLightColor(hex: string) {
+  const value = hex.replace("#", "")
+  if (value.length !== 6) return false
+  const r = Number.parseInt(value.slice(0, 2), 16)
+  const g = Number.parseInt(value.slice(2, 4), 16)
+  const b = Number.parseInt(value.slice(4, 6), 16)
+  return (r * 299 + g * 587 + b * 114) / 1000 > 155
+}
+
+function truncateSpineTitle(title: string, maxChars: number) {
+  const cleaned = title.trim()
+  if (cleaned.length <= maxChars) return cleaned
+  return `${cleaned.slice(0, Math.max(1, maxChars - 1))}…`
+}
+
 export function BookSpine({
   title,
   authors,
   thumbnail,
   compact = false,
   highlight = false,
+  showTitle = false,
   width,
 }: {
   title: string
@@ -16,6 +32,7 @@ export function BookSpine({
   thumbnail: string | null
   compact?: boolean
   highlight?: boolean
+  showTitle?: boolean
   width: number
 }) {
   const backgroundColor = useCoverColor(
@@ -23,6 +40,8 @@ export function BookSpine({
     `${title}:${thumbnail ?? "none"}`
   )
   const height = compact ? 48 : 73.6
+  const fontSize = compact ? 8 : 10
+  const maxChars = Math.max(1, Math.floor((height - 12) / (fontSize * 1.08)))
 
   return (
     <div
@@ -49,10 +68,33 @@ export function BookSpine({
               "inset -6px 0 10px rgba(44, 28, 20, 0.28), 3px 4px 8px rgba(59, 36, 20, 0.18)",
           }}
         >
-          <span
-            className="pointer-events-none absolute inset-y-1 left-1/2 w-px -translate-x-1/2 opacity-25"
-            style={{ backgroundColor: "rgba(255,248,240,0.4)" }}
-          />
+          {showTitle ? null : (
+            <span
+              className="pointer-events-none absolute inset-y-1 left-1/2 w-px -translate-x-1/2 opacity-25"
+              style={{ backgroundColor: "rgba(255,248,240,0.4)" }}
+            />
+          )}
+          {showTitle ? (
+            <span
+              className="pointer-events-none absolute inset-0 flex justify-center overflow-hidden pt-1.5 pb-1.5 font-medium"
+            >
+              <span
+                className="max-h-full overflow-hidden"
+                style={{
+                  writingMode: "vertical-rl",
+                  textOrientation: "upright",
+                  fontSize,
+                  lineHeight: 1,
+                  letterSpacing: "0.06em",
+                  whiteSpace: "nowrap",
+                  textOverflow: "ellipsis",
+                  color: isLightColor(backgroundColor) ? "#3B2414" : "#FFF8F0",
+                }}
+              >
+                {truncateSpineTitle(title, maxChars)}
+              </span>
+            </span>
+          ) : null}
         </div>
         <div
           className="absolute top-0 h-full rounded-r-[1px]"

@@ -12,9 +12,11 @@ const MIN_GAP = 4
 export function Bookshelf({
   compact = false,
   highlightId,
+  showTitles = false,
 }: {
   compact?: boolean
   highlightId?: string | null
+  showTitles?: boolean
 }) {
   const { books } = useDadok()
   const rowRef = useRef<HTMLDivElement>(null)
@@ -90,6 +92,7 @@ export function Bookshelf({
                       thumbnail={book.thumbnail}
                       compact={compact}
                       highlight={highlightId === book.id}
+                      showTitle={showTitles}
                       width={bookWidth}
                     />
                   ))
