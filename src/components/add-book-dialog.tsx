@@ -13,6 +13,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { searchBooks, type SearchBook } from "@/lib/api"
 import { useDadok } from "@/lib/store"
+import { BOOK_LIMIT } from "@/lib/types"
 import { Plus } from "lucide-react"
 
 export function AddBookDialog({
@@ -65,6 +66,10 @@ export function AddBookDialog({
   }
 
   function handleAdd(item: SearchBook) {
+    if (books.length >= BOOK_LIMIT) {
+      setMessage(`책장은 ${BOOK_LIMIT}권까지만 꽂을 수 있습니다.`)
+      return
+    }
     const added = addBook({
       googleId: item.id,
       title: item.title,
@@ -95,6 +100,7 @@ export function AddBookDialog({
             variant="ghost"
             className="size-10 rounded-full"
             aria-label="책 추가"
+            disabled={books.length >= BOOK_LIMIT}
           />
         }
       >

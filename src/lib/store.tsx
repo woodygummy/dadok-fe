@@ -14,7 +14,7 @@ import {
   loadState,
   saveState,
 } from "@/lib/storage"
-import type { Book, DadokState, Profile, ThemeName } from "@/lib/types"
+import { BOOK_LIMIT, type Book, type DadokState, type Profile, type ThemeName } from "@/lib/types"
 
 type AddBookInput = {
   googleId: string
@@ -72,6 +72,9 @@ export function DadokProvider({ children }: { children: React.ReactNode }) {
   )
 
   const addBook = useCallback((input: AddBookInput) => {
+    if (snapshot.books.length >= BOOK_LIMIT) {
+      return null
+    }
     if (snapshot.books.some((book) => book.googleId === input.googleId)) {
       return null
     }

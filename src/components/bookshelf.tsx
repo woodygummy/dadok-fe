@@ -1,10 +1,11 @@
 "use client"
 
 import { useDadok } from "@/lib/store"
+import { BOOK_LIMIT } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
-const SHELF_ROWS = 3
 const BOOKS_PER_ROW = 6
+const COMPACT_ROWS = 3
 
 export function Bookshelf({
   compact = false,
@@ -14,9 +15,12 @@ export function Bookshelf({
   highlightId?: string | null
 }) {
   const { books } = useDadok()
-  const slots = SHELF_ROWS * BOOKS_PER_ROW
+  const slots = compact ? COMPACT_ROWS * BOOKS_PER_ROW : BOOK_LIMIT
   const visible = books.slice(0, slots)
-  const rows = Array.from({ length: SHELF_ROWS }, (_, row) =>
+  const rowCount = compact
+    ? COMPACT_ROWS
+    : Math.max(COMPACT_ROWS, Math.ceil(Math.max(visible.length, 1) / BOOKS_PER_ROW))
+  const rows = Array.from({ length: rowCount }, (_, row) =>
     visible.slice(row * BOOKS_PER_ROW, (row + 1) * BOOKS_PER_ROW)
   )
 

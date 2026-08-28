@@ -31,3 +31,5 @@ export const THEME_LABEL: Record<ThemeName, string> = {
   dark: "다크",
   wood: "우드",
 }
+
+export const BOOK_LIMIT = 100
