@@ -31,6 +31,7 @@ type StoreValue = {
   removeBook: (id: string) => void
   setNickname: (nickname: string) => void
   setTheme: (theme: ThemeName) => void
+  setAvatar: (avatarUrl: string | null) => void
   logout: () => void
 }
 
@@ -117,6 +118,13 @@ export function DadokProvider({ children }: { children: React.ReactNode }) {
     })
   }, [])
 
+  const setAvatar = useCallback((avatarUrl: string | null) => {
+    commit({
+      ...snapshot,
+      profile: { ...snapshot.profile, avatarUrl },
+    })
+  }, [])
+
   const logout = useCallback(() => {
     commit(emptyState())
   }, [])
@@ -130,6 +138,7 @@ export function DadokProvider({ children }: { children: React.ReactNode }) {
       removeBook,
       setNickname,
       setTheme,
+      setAvatar,
       logout,
     }),
     [
@@ -140,6 +149,7 @@ export function DadokProvider({ children }: { children: React.ReactNode }) {
       removeBook,
       setNickname,
       setTheme,
+      setAvatar,
       logout,
     ]
   )

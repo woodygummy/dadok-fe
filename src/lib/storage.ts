@@ -16,12 +16,14 @@ export function loadState(): DadokState {
     if (!raw) return emptyState()
     const parsed = JSON.parse(raw) as Partial<DadokState>
     const theme = parsed.profile?.theme
+    const avatarUrl = parsed.profile?.avatarUrl
     return {
       books: Array.isArray(parsed.books) ? parsed.books : [],
       profile: {
         nickname: parsed.profile?.nickname?.trim() || DEFAULT_PROFILE.nickname,
         email: parsed.profile?.email?.trim() || DEFAULT_PROFILE.email,
         theme: isTheme(theme) ? theme : DEFAULT_PROFILE.theme,
+        avatarUrl: isAvatarUrl(avatarUrl) ? avatarUrl : null,
       },
     }
   } catch {
@@ -39,4 +41,8 @@ export function createId(prefix: string) {
 
 function isTheme(value: unknown): value is ThemeName {
   return value === "white" || value === "dark" || value === "wood"
+}
+
+function isAvatarUrl(value: unknown): value is string {
+  return typeof value === "string" && value.startsWith("data:image/")
 }

@@ -13,6 +13,7 @@ export type Profile = {
   nickname: string
   email: string
   theme: ThemeName
+  avatarUrl: string | null
 }
 
 export type DadokState = {
@@ -24,6 +25,7 @@ export const DEFAULT_PROFILE: Profile = {
   nickname: "다독이",
   email: "guest@dadok.app",
   theme: "white",
+  avatarUrl: null,
 }
 
 export const THEME_LABEL: Record<ThemeName, string> = {
