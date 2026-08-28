@@ -5,8 +5,6 @@ import { Button } from "@/components/ui/button"
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
-  DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
@@ -48,11 +46,11 @@ export function AddBookDialog({
         if (next.length === 0) setError("검색 결과가 없습니다.")
       } catch {
         setResults([])
-        setError("Google Books 검색에 실패했습니다.")
+        setError("책 검색에 실패했습니다.")
       } finally {
         setLoading(false)
       }
-    }, 350)
+    }, 180)
 
     return () => window.clearTimeout(timer)
   }, [query, open])
@@ -107,15 +105,17 @@ export function AddBookDialog({
         <Plus className="size-6" />
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>책 검색해서 꽂기</DialogTitle>
-          <DialogDescription>
-            Google Books에서 제목이나 저자를 검색한 뒤 책장에 넣습니다.
-          </DialogDescription>
-        </DialogHeader>
+        <DialogTitle className="sr-only">책 검색</DialogTitle>
         <Input
           value={query}
           onChange={(event) => setQuery(event.target.value)}
+          onInput={(event) => {
+            const value = (event.target as HTMLInputElement).value
+            setQuery(value)
+          }}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") event.preventDefault()
+          }}
           placeholder="책 제목 또는 저자"
           autoFocus
         />

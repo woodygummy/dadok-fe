@@ -7,75 +7,43 @@ type SearchBook = {
   thumbnail: string | null
 }
 
-type GoogleVolume = {
-  id: string
-  volumeInfo?: {
-    title?: string
-    authors?: string[]
-    imageLinks?: {
-      thumbnail?: string
-      smallThumbnail?: string
-    }
-  }
-}
-
-type OpenLibraryDoc = {
-  key?: string
+type AladinItem = {
+  itemId?: number | string
+  isbn?: string
+  isbn13?: string
   title?: string
-  author_name?: string[]
-  cover_i?: number
+  author?: string
+  cover?: string
 }
 
-function httpsUrl(url: string) {
-  return url.replace("http://", "https://")
+type AladinResponse = {
+  item?: AladinItem[]
 }
 
-async function searchGoogle(q: string): Promise<SearchBook[] | null> {
-  const params = new URLSearchParams({
-    q,
-    maxResults: "20",
-    printType: "books",
-  })
-  const key = process.env.GOOGLE_BOOKS_API_KEY
-  if (key) params.set("key", key)
+function parseAladinJson(text: string): AladinResponse {
+  const trimmed = text.trim()
+  const jsonText = trimmed.startsWith("{")
+    ? trimmed
+    : trimmed.slice(trimmed.indexOf("{"), trimmed.lastIndexOf("}") + 1)
+  return JSON.parse(jsonText) as AladinResponse
+}
 
-  const response = await fetch(
-    `https://www.googleapis.com/books/v1/volumes?${params.toString()}`,
-    { headers: { Accept: "application/json" } }
-  )
-  if (!response.ok) return null
-
-  const data = (await response.json()) as { items?: GoogleVolume[] }
-  return (data.items ?? []).map((item) => {
-    const info = item.volumeInfo ?? {}
-    const thumbnail =
-      info.imageLinks?.thumbnail ?? info.imageLinks?.smallThumbnail ?? null
+function mapItems(items: AladinItem[]): SearchBook[] {
+  return items.map((item, index) => {
+    const id =
+      item.isbn13 ||
+      item.isbn ||
+      (item.itemId != null ? String(item.itemId) : `aladin-${index}`)
+    const thumbnail = item.cover
+      ? item.cover.replace("http://", "https://")
+      : null
     return {
-      id: item.id,
-      title: info.title ?? "제목 없음",
-      authors: info.authors?.join(", ") ?? "저자 미상",
-      thumbnail: thumbnail ? httpsUrl(thumbnail) : null,
+      id,
+      title: item.title?.trim() || "제목 없음",
+      authors: item.author?.trim() || "저자 미상",
+      thumbnail,
     }
   })
-}
-
-async function searchOpenLibrary(q: string): Promise<SearchBook[]> {
-  const params = new URLSearchParams({ q, limit: "20" })
-  const response = await fetch(
-    `https://openlibrary.org/search.json?${params.toString()}`,
-    { headers: { Accept: "application/json" } }
-  )
-  if (!response.ok) return []
-
-  const data = (await response.json()) as { docs?: OpenLibraryDoc[] }
-  return (data.docs ?? []).map((doc, index) => ({
-    id: doc.key ?? `ol-${index}`,
-    title: doc.title ?? "제목 없음",
-    authors: doc.author_name?.join(", ") ?? "저자 미상",
-    thumbnail: doc.cover_i
-      ? `https://covers.openlibrary.org/b/id/${doc.cover_i}-M.jpg`
-      : null,
-  }))
 }
 
 export async function GET(request: NextRequest) {
@@ -84,11 +52,45 @@ export async function GET(request: NextRequest) {
     return Response.json({ books: [] })
   }
 
-  const google = await searchGoogle(q)
-  if (google && google.length > 0) {
-    return Response.json({ books: google, source: "google" })
+  const ttbkey = process.env.ALADIN_TTB_KEY?.trim()
+  if (!ttbkey) {
+    return Response.json(
+      { books: [], error: "aladin_key_missing" },
+      { status: 503 }
+    )
   }
 
-  const fallback = await searchOpenLibrary(q)
-  return Response.json({ books: fallback, source: "openlibrary" })
+  const params = new URLSearchParams({
+    ttbkey,
+    Query: q,
+    QueryType: "Keyword",
+    MaxResults: "20",
+    start: "1",
+    SearchTarget: "Book",
+    output: "js",
+    Version: "20131101",
+    Cover: "MidBig",
+  })
+
+  const response = await fetch(
+    `https://www.aladin.co.kr/ttb/api/ItemSearch.aspx?${params.toString()}`,
+    { headers: { Accept: "application/json, text/plain, */*" } }
+  )
+
+  if (!response.ok) {
+    return Response.json(
+      { books: [], error: "aladin_unavailable" },
+      { status: 502 }
+    )
+  }
+
+  try {
+    const books = mapItems(parseAladinJson(await response.text()).item ?? [])
+    return Response.json({ books, source: "aladin" })
+  } catch {
+    return Response.json(
+      { books: [], error: "aladin_parse_failed" },
+      { status: 502 }
+    )
+  }
 }
