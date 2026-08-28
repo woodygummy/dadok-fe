@@ -1,9 +1,10 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
+import { BookDetailDialog } from "@/components/book-detail-dialog"
 import { BookSpine } from "@/components/book-spine"
 import { useDadok } from "@/lib/store"
-import { BOOK_LIMIT } from "@/lib/types"
+import { BOOK_LIMIT, type Book } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
 const COMPACT_ROWS = 3
@@ -13,15 +14,18 @@ export function Bookshelf({
   compact = false,
   highlightId,
   showTitles = false,
+  onSelectBook,
 }: {
   compact?: boolean
   highlightId?: string | null
   showTitles?: boolean
+  onSelectBook?: (book: Book) => void
 }) {
   const { books } = useDadok()
   const rowRef = useRef<HTMLDivElement>(null)
   const bookWidth = compact ? 28 : 36
   const [booksPerRow, setBooksPerRow] = useState(6)
+  const [selected, setSelected] = useState<Book | null>(null)
 
   useEffect(() => {
     const el = rowRef.current
@@ -94,6 +98,10 @@ export function Bookshelf({
                       highlight={highlightId === book.id}
                       showTitle={showTitles}
                       width={bookWidth}
+                      onSelect={() => {
+                        onSelectBook?.(book)
+                        setSelected(book)
+                      }}
                     />
                   ))
                 )}
@@ -103,6 +111,13 @@ export function Bookshelf({
           )
         })}
       </div>
+      <BookDetailDialog
+        book={selected}
+        open={selected !== null}
+        onOpenChange={(next) => {
+          if (!next) setSelected(null)
+        }}
+      />
     </div>
   )
 }
