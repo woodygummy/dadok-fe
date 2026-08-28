@@ -30,12 +30,7 @@ export function AddBookDialog({
   useEffect(() => {
     if (!open) return
     const q = query.trim()
-    if (!q) {
-      setResults([])
-      setError("")
-      setLoading(false)
-      return
-    }
+    const delay = q ? 180 : 0
 
     const timer = window.setTimeout(async () => {
       setLoading(true)
@@ -43,14 +38,14 @@ export function AddBookDialog({
       try {
         const next = await searchBooks(q)
         setResults(next)
-        if (next.length === 0) setError("검색 결과가 없습니다.")
+        if (q && next.length === 0) setError("검색 결과가 없습니다.")
       } catch {
         setResults([])
         setError("책 검색에 실패했습니다.")
       } finally {
         setLoading(false)
       }
-    }, 180)
+    }, delay)
 
     return () => window.clearTimeout(timer)
   }, [query, open])
@@ -124,7 +119,7 @@ export function AddBookDialog({
         ) : null}
         {error ? <p className="text-sm text-destructive">{error}</p> : null}
         {message ? <p className="text-sm text-muted-foreground">{message}</p> : null}
-        <ul className="max-h-72 space-y-2 overflow-y-auto">
+        <ul className="h-[19.5rem] space-y-2 overflow-y-auto">
           {results.map((item) => {
             const already = books.some((book) => book.googleId === item.id)
             return (

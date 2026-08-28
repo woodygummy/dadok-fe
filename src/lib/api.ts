@@ -5,11 +5,10 @@ export type SearchBook = {
   thumbnail: string | null
 }
 
-export async function searchBooks(query: string): Promise<SearchBook[]> {
+export async function searchBooks(query = ""): Promise<SearchBook[]> {
   const q = query.trim()
-  if (!q) return []
-
-  const response = await fetch(`/api/books?q=${encodeURIComponent(q)}`)
+  const url = q ? `/api/books?q=${encodeURIComponent(q)}` : "/api/books"
+  const response = await fetch(url)
   if (!response.ok) {
     throw new Error("책을 찾지 못했습니다.")
   }
