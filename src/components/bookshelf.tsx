@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
+import { BookSpine } from "@/components/book-spine"
 import { useDadok } from "@/lib/store"
 import { BOOK_LIMIT } from "@/lib/types"
 import { cn } from "@/lib/utils"
@@ -52,7 +53,7 @@ export function Bookshelf({
   )
 
   return (
-    <div className="w-full overflow-hidden rounded-[20px] border-4 border-[var(--wood)] bg-[var(--wood-deep)] p-2 shadow-[0_10px_24px_rgba(59,36,20,0.16)]">
+    <div className="w-full overflow-visible rounded-[20px] border-4 border-[var(--wood)] bg-[var(--wood-deep)] p-2 shadow-[0_10px_24px_rgba(59,36,20,0.16)]">
       <div className="rounded-[14px] bg-[color-mix(in_srgb,var(--wood)_88%,#2c1c14)] p-2">
         {rows.map((rowBooks, rowIndex) => {
           const filled = rowBooks.length === booksPerRow
@@ -82,27 +83,15 @@ export function Bookshelf({
                   </p>
                 ) : (
                   rowBooks.map((book) => (
-                    <div
+                    <BookSpine
                       key={book.id}
-                      className={cn(
-                        "relative origin-bottom overflow-hidden rounded-[3px] border border-[rgba(59,36,20,0.35)] bg-[var(--terracotta)] shadow-[2px_2px_0_rgba(59,36,20,0.18)]",
-                        compact ? "h-12" : "h-[4.6rem]",
-                        highlightId === book.id && "animate-shelf-in"
-                      )}
-                      style={{ width: bookWidth, flex: "0 0 auto" }}
-                      title={`${book.title} · ${book.authors}`}
-                    >
-                      {book.thumbnail ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={book.thumbnail}
-                          alt={book.title}
-                          className="h-full w-full object-cover"
-                        />
-                      ) : (
-                        <span className="block h-full w-full bg-[linear-gradient(90deg,#c45c26,#7a8f72,#c4785a)]" />
-                      )}
-                    </div>
+                      title={book.title}
+                      authors={book.authors}
+                      thumbnail={book.thumbnail}
+                      compact={compact}
+                      highlight={highlightId === book.id}
+                      width={bookWidth}
+                    />
                   ))
                 )}
               </div>
