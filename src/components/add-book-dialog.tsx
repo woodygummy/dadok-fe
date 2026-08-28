@@ -19,7 +19,7 @@ export function AddBookDialog({
 }: {
   onAdded?: (bookId: string) => void
 }) {
-  const { books, addBook } = useDadok()
+  const { books, addBook, removeBook } = useDadok()
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState("")
   const [results, setResults] = useState<SearchBook[]>([])
@@ -73,9 +73,15 @@ export function AddBookDialog({
       setMessage("이미 책장에 있는 책입니다.")
       return
     }
+    setMessage("")
     onAdded?.(added.id)
-    reset()
-    setOpen(false)
+  }
+
+  function handleRemove(item: SearchBook) {
+    const stored = books.find((book) => book.googleId === item.id)
+    if (!stored) return
+    removeBook(stored.id)
+    setMessage("")
   }
 
   return (
@@ -93,7 +99,6 @@ export function AddBookDialog({
             variant="ghost"
             className="size-10 rounded-full"
             aria-label="책 추가"
-            disabled={books.length >= BOOK_LIMIT}
           />
         }
       >
@@ -123,37 +128,49 @@ export function AddBookDialog({
           {results.map((item) => {
             const already = books.some((book) => book.googleId === item.id)
             return (
-              <li key={item.id}>
-                <button
-                  type="button"
-                  onClick={() => handleAdd(item)}
-                  disabled={already}
-                  className="flex w-full items-center gap-3 rounded-xl bg-muted/60 p-2 text-left disabled:opacity-50"
-                >
-                  {item.thumbnail ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={item.thumbnail}
-                      alt=""
-                      className="h-14 w-10 rounded object-cover"
-                    />
-                  ) : (
-                    <span className="h-14 w-10 rounded bg-[var(--wood)]" />
-                  )}
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate text-sm font-medium">
-                      {item.title}
-                    </span>
-                    <span className="block truncate text-xs text-muted-foreground">
-                      {item.authors}
-                    </span>
-                    {already ? (
-                      <span className="text-xs text-muted-foreground">
-                        이미 꽂혀 있음
-                      </span>
-                    ) : null}
+              <li
+                key={item.id}
+                className="flex items-center gap-2 rounded-xl bg-muted/60 p-2"
+              >
+                {item.thumbnail ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={item.thumbnail}
+                    alt=""
+                    className="h-14 w-10 shrink-0 rounded object-cover"
+                  />
+                ) : (
+                  <span className="h-14 w-10 shrink-0 rounded bg-[var(--wood)]" />
+                )}
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-sm font-medium">
+                    {item.title}
                   </span>
-                </button>
+                  <span className="block truncate text-xs text-muted-foreground">
+                    {item.authors}
+                  </span>
+                </span>
+                {already ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="shrink-0"
+                    onClick={() => handleRemove(item)}
+                  >
+                    빼기
+                  </Button>
+                ) : (
+                  <Button
+                    type="button"
+                    size="sm"
+                    className="shrink-0"
+                    disabled={books.length >= BOOK_LIMIT}
+                    onClick={() => handleAdd(item)}
+                  >
+                    추가
+                  </Button>
+                )}
               </li>
             )
           })}
