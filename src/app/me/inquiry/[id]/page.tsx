@@ -55,7 +55,6 @@ export default function InquiryThreadPage({
   }
 
   const backHref = session?.user.isAdmin ? "/me/inquiries" : "/me/inquiry"
-  const sendLabel = session?.user.isAdmin ? "답변 보내기" : "추가 보내기"
 
   return (
     <div className="space-y-6">
@@ -96,7 +95,7 @@ export default function InquiryThreadPage({
 
       {error ? <p className="text-sm text-[var(--destructive)]">{error}</p> : null}
 
-      {session ? (
+      {session?.user.isAdmin ? (
         <form onSubmit={onReply} className="space-y-3">
           <div className="sketch-frame rounded-[14px]">
             <textarea
@@ -104,7 +103,7 @@ export default function InquiryThreadPage({
               onChange={(event) => setBody(event.target.value)}
               maxLength={4000}
               rows={4}
-              placeholder={session.user.isAdmin ? "답변을 적어 주세요." : "내용을 더 적어 주세요."}
+              placeholder="답변을 적어 주세요."
               className="min-h-[6rem] w-full resize-none bg-transparent px-4 py-3 text-[15px] outline-none"
             />
           </div>
@@ -114,7 +113,7 @@ export default function InquiryThreadPage({
             disabled={pending}
             className="sketch-frame sketch-frame-fill flex h-14 w-full items-center justify-center rounded-[14px] text-[15px] font-medium text-[#FFF8F0] disabled:opacity-60"
           >
-            {pending ? "보내는 중…" : sendLabel}
+            {pending ? "보내는 중…" : "답변 보내기"}
           </button>
         </form>
       ) : null}

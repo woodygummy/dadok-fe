@@ -60,7 +60,7 @@ export function ImagePicker({
           className="text-sm text-muted-foreground"
           onClick={() => inputRef.current?.click()}
         >
-          스크린샷 첨부 ({images.length}/{max})
+          파일 첨부하기 ({images.length}/{max})
         </button>
       ) : null}
       <input

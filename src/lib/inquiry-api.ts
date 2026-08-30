@@ -3,6 +3,9 @@ import { API_BASE, AuthError } from "@/lib/auth-api"
 export type InquirySummary = {
   id: string
   preview: string
+  question: string
+  reply: string
+  hasReply: boolean
   updatedAt: string
   unread: boolean
   fromLoginId: string

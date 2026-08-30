@@ -7,12 +7,15 @@ import { THEME_LABEL } from "@/lib/types"
 
 export default function MePage() {
   const { profile, session } = useDadok()
-  const inquiryHref = session?.user.isAdmin ? "/me/inquiries" : "/me/inquiry"
+  const isAdmin = Boolean(session?.user.isAdmin)
 
   const menu = [
     { href: "/me/account", label: "내 계정" },
     { href: "/me/notifications", label: "알림 설정" },
-    { href: inquiryHref, label: "문의 사항" },
+    {
+      href: isAdmin ? "/me/inquiries" : "/me/inquiry",
+      label: isAdmin ? "문의 사항" : "문의하기",
+    },
   ]
 
   return (

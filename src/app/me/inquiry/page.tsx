@@ -3,8 +3,7 @@
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { ChevronRight } from "lucide-react"
-import { InquiryCompose } from "@/components/inquiry-compose"
+import { Pencil, ChevronRight } from "lucide-react"
 import { AuthError } from "@/lib/auth-api"
 import { fetchInquiries, type InquirySummary } from "@/lib/inquiry-api"
 import { useDadok } from "@/lib/store"
@@ -35,34 +34,43 @@ export default function InquiryPage() {
       <Link href="/me" className="text-sm text-muted-foreground">
         이전
       </Link>
-      <h1 className="text-lg font-medium">문의 사항</h1>
-      <InquiryCompose
-        token={session.token}
-        onSent={(id) => router.push(`/me/inquiry/${id}`)}
-      />
+      <h1 className="text-lg font-medium">문의하기</h1>
       {error ? <p className="text-sm text-[var(--destructive)]">{error}</p> : null}
-      {items.length ? (
-        <div className="space-y-2">
-          <h2 className="text-sm text-muted-foreground">보낸 문의</h2>
-          <ul className="sketch-frame overflow-hidden rounded-[18px] bg-[var(--niche)]">
-            {items.map((item, index) => (
-              <li key={item.id}>
-                {index > 0 ? <div className="sketch-line mx-4" /> : null}
-                <Link
-                  href={`/me/inquiry/${item.id}`}
-                  className="flex items-center justify-between gap-3 px-5 py-[0.95rem]"
-                >
-                  <span className="min-w-0 truncate text-[15px] font-medium">
-                    {item.unread ? "답변 있음 · " : ""}
-                    {item.preview}
+      {items.length === 0 ? (
+        <p className="text-sm text-muted-foreground">아직 보낸 문의가 없습니다.</p>
+      ) : (
+        <ul className="space-y-3">
+          {items.map((item) => (
+            <li key={item.id}>
+              <Link
+                href={`/me/inquiry/${item.id}`}
+                className="sketch-frame flex items-center overflow-hidden rounded-[18px] bg-[var(--niche)]"
+              >
+                <span className="min-w-0 flex-1 px-5 py-3.5">
+                  <span className="flex gap-2 text-[15px]">
+                    <span className="shrink-0 font-medium">문의</span>
+                    <span className="min-w-0 truncate text-muted-foreground">
+                      {item.question || item.preview}
+                    </span>
                   </span>
-                  <ChevronRight className="size-4 shrink-0 text-[#8a7a6c]" strokeWidth={2} />
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </div>
-      ) : null}
+                </span>
+                {item.hasReply ? (
+                  <span className="shrink-0 px-4 text-[13px] text-[#3b2414]">답변 보기</span>
+                ) : (
+                  <ChevronRight className="mx-4 size-4 shrink-0 text-[#8a7a6c]" strokeWidth={2} />
+                )}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+      <Link
+        href="/me/inquiry/new"
+        aria-label="문의하기"
+        className="fixed right-6 bottom-24 z-40 flex size-14 items-center justify-center rounded-full bg-[#3b2414] text-[#fff8f0] shadow-[0_10px_24px_rgba(59,36,20,0.22)]"
+      >
+        <Pencil className="size-5" strokeWidth={2} />
+      </Link>
     </div>
   )
 }

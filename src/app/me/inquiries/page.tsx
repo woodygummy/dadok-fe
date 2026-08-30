@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { ChevronRight } from "lucide-react"
 import { AuthError } from "@/lib/auth-api"
 import { fetchInquiries, type InquirySummary } from "@/lib/inquiry-api"
 import { useDadok } from "@/lib/store"
@@ -39,24 +38,28 @@ export default function InquiriesInboxPage() {
       {items.length === 0 ? (
         <p className="text-sm text-muted-foreground">아직 들어온 문의가 없습니다.</p>
       ) : (
-        <ul className="sketch-frame overflow-hidden rounded-[18px] bg-[var(--niche)]">
-          {items.map((item, index) => (
+        <ul className="space-y-3">
+          {items.map((item) => (
             <li key={item.id}>
-              {index > 0 ? <div className="sketch-line mx-4" /> : null}
               <Link
                 href={`/me/inquiry/${item.id}`}
-                className="flex items-center justify-between gap-3 px-5 py-[0.95rem]"
+                className="sketch-frame flex items-center overflow-hidden rounded-[18px] bg-[var(--niche)]"
               >
-                <span className="min-w-0">
-                  <span className="block truncate text-[15px] font-medium">
-                    {item.unread ? "새 문의 · " : ""}
-                    {item.preview}
-                  </span>
-                  <span className="text-xs text-muted-foreground">
+                <span className="min-w-0 flex-1 px-5 py-3.5">
+                  <span className="block text-xs text-muted-foreground">
                     {item.fromNickname || item.fromLoginId}
+                    {item.unread ? " · 새 문의" : ""}
+                  </span>
+                  <span className="mt-1 flex gap-2 text-[15px]">
+                    <span className="shrink-0 font-medium">문의</span>
+                    <span className="min-w-0 truncate text-muted-foreground">
+                      {item.question || item.preview}
+                    </span>
                   </span>
                 </span>
-                <ChevronRight className="size-4 shrink-0 text-[#8a7a6c]" strokeWidth={2} />
+                <span className="shrink-0 px-4 text-[13px] text-[#3b2414]">
+                  {item.hasReply ? "답변 보기" : "답변하기"}
+                </span>
               </Link>
             </li>
           ))}
