@@ -9,6 +9,7 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-sans);
   --font-heading: var(--font-sans);
+  --font-logo: var(--font-logo);
   --color-ring: var(--ring);
   --color-input: var(--input);
   --color-border: var(--border);
@@ -144,5 +145,44 @@
   }
   html {
     @apply font-sans;
+  }
+}
+
+@layer components {
+  .sketch-frame {
+    position: relative;
+  }
+
+  .sketch-frame::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border: 2.5px solid #2c2926;
+    border-radius: inherit;
+    pointer-events: none;
+    filter: url(#dadok-sketch);
+  }
+
+  .sketch-frame-fill {
+    background: #4a3428;
+  }
+
+  [data-theme="dark"] .sketch-frame::after {
+    border-color: #e8ddd0;
+  }
+
+  [data-theme="dark"] .sketch-frame-fill {
+    background: #6b5344;
+  }
+
+  .sketch-line {
+    height: 1.5px;
+    background: #2c2926;
+    filter: url(#dadok-sketch);
+    opacity: 0.75;
+  }
+
+  [data-theme="dark"] .sketch-line {
+    background: #e8ddd0;
   }
 }

@@ -7,14 +7,19 @@ import {
   useMemo,
   useSyncExternalStore,
 } from "react"
+import { fetchMe, loginAccount, registerAccount } from "@/lib/auth-api"
+import { capturePreviewState, isCapturePreview } from "@/lib/capture-preview"
 import { applyTheme } from "@/lib/theme"
 import {
+  clearToken,
   createId,
   emptyState,
   loadState,
+  loadToken,
   saveState,
+  saveToken,
 } from "@/lib/storage"
-import { BOOK_LIMIT, type Book, type DadokState, type Profile, type ThemeName } from "@/lib/types"
+import { BOOK_LIMIT, type Book, type DadokState, type ThemeName } from "@/lib/types"
 
 type AddBookInput = {
   googleId: string
@@ -25,8 +30,17 @@ type AddBookInput = {
 
 type StoreValue = {
   ready: boolean
+  session: DadokState["session"]
   books: Book[]
-  profile: Profile
+  profile: DadokState["profile"]
+  login: (loginId: string, password: string) => Promise<void>
+  register: (input: {
+    loginId: string
+    password: string
+    email: string
+  }) => Promise<void>
+  completeOAuth: (token: string) => Promise<void>
+  refreshUser: () => Promise<void>
   addBook: (input: AddBookInput) => Book | null
   removeBook: (id: string) => void
   setNickname: (nickname: string) => void
@@ -36,6 +50,7 @@ type StoreValue = {
 }
 
 let snapshot: DadokState = emptyState()
+let hydrated = false
 const listeners = new Set<() => void>()
 
 function emit() {
@@ -51,8 +66,10 @@ function getSnapshot() {
   return snapshot
 }
 
+const serverSnapshot = emptyState()
+
 function getServerSnapshot() {
-  return emptyState()
+  return serverSnapshot
 }
 
 function commit(next: DadokState) {
@@ -62,15 +79,62 @@ function commit(next: DadokState) {
   emit()
 }
 
+async function applySession(token: string, user: NonNullable<DadokState["session"]>["user"]) {
+  saveToken(token)
+  const saved = loadState(user.id)
+  commit({
+    books: saved.books,
+    profile: {
+      ...saved.profile,
+      nickname: saved.profile.nickname || user.nickname,
+      email: user.email || saved.profile.email,
+    },
+    session: { token, user },
+  })
+}
+
 const StoreContext = createContext<StoreValue | null>(null)
 
 export function DadokProvider({ children }: { children: React.ReactNode }) {
   const state = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot)
   const ready = useSyncExternalStore(
     subscribe,
-    () => true,
+    () => hydrated,
     () => false
   )
+
+  const login = useCallback(async (loginId: string, password: string) => {
+    const result = await loginAccount(loginId, password)
+    await applySession(result.token, result.user)
+  }, [])
+
+  const register = useCallback(
+    async (input: { loginId: string; password: string; email: string }) => {
+      const result = await registerAccount(input)
+      await applySession(result.token, result.user)
+    },
+    []
+  )
+
+  const completeOAuth = useCallback(async (token: string) => {
+    const user = await fetchMe(token)
+    await applySession(token, user)
+  }, [])
+
+  const refreshUser = useCallback(async () => {
+    const token = snapshot.session?.token
+    if (!token) return
+    const user = await fetchMe(token)
+    commit({
+      ...snapshot,
+      profile: {
+        ...snapshot.profile,
+        email: user.email || snapshot.profile.email,
+        nickname: snapshot.profile.nickname || user.nickname,
+      },
+      session: { token, user },
+    })
+  }, [])
 
   const addBook = useCallback((input: AddBookInput) => {
     if (snapshot.books.length >= BOOK_LIMIT) {
@@ -126,14 +190,22 @@ export function DadokProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const logout = useCallback(() => {
-    commit(emptyState())
+    clearToken()
+    snapshot = emptyState()
+    applyTheme(snapshot.profile.theme)
+    emit()
   }, [])
 
   const value = useMemo<StoreValue>(
     () => ({
       ready,
+      session: state.session,
       books: state.books,
       profile: state.profile,
+      login,
+      register,
+      completeOAuth,
+      refreshUser,
       addBook,
       removeBook,
       setNickname,
@@ -143,8 +215,13 @@ export function DadokProvider({ children }: { children: React.ReactNode }) {
     }),
     [
       ready,
+      state.session,
       state.books,
       state.profile,
+      login,
+      register,
+      completeOAuth,
+      refreshUser,
       addBook,
       removeBook,
       setNickname,
@@ -157,8 +234,39 @@ export function DadokProvider({ children }: { children: React.ReactNode }) {
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>
 }
 
-export function hydrateDadokStore() {
-  snapshot = loadState()
+export async function hydrateDadokStore() {
+  if (isCapturePreview()) {
+    snapshot = capturePreviewState()
+    hydrated = true
+    applyTheme(snapshot.profile.theme)
+    emit()
+    return
+  }
+  const token = loadToken()
+  if (!token) {
+    snapshot = emptyState()
+    hydrated = true
+    applyTheme(snapshot.profile.theme)
+    emit()
+    return
+  }
+  try {
+    const user = await fetchMe(token)
+    const saved = loadState(user.id)
+    snapshot = {
+      books: saved.books,
+      profile: {
+        ...saved.profile,
+        nickname: saved.profile.nickname || user.nickname,
+        email: user.email || saved.profile.email,
+      },
+      session: { token, user },
+    }
+  } catch {
+    clearToken()
+    snapshot = emptyState()
+  }
+  hydrated = true
   applyTheme(snapshot.profile.theme)
   emit()
 }

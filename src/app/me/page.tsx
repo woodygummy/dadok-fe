@@ -1,17 +1,25 @@
 "use client"
 
 import { useEffect, useState, type ChangeEvent } from "react"
+import { useRouter } from "next/navigation"
 import { Pencil } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { readAvatarFile } from "@/lib/read-avatar"
+import { SocialAuthButtons } from "@/components/social-auth-buttons"
 import { useDadok } from "@/lib/store"
-import { THEME_LABEL, type ThemeName } from "@/lib/types"
+import { THEME_LABEL, type Provider, type ThemeName } from "@/lib/types"
 
 const THEMES: ThemeName[] = ["white", "dark", "wood"]
+const PROVIDER_LABEL: Record<Provider, string> = {
+  kakao: "카카오",
+  naver: "네이버",
+  google: "Google",
+}
 
 export default function MePage() {
-  const { profile, setNickname, setTheme, setAvatar, logout } = useDadok()
+  const { profile, session, setNickname, setTheme, setAvatar, logout } = useDadok()
+  const router = useRouter()
   const [nickname, setNicknameDraft] = useState(profile.nickname)
 
   useEffect(() => {
@@ -38,6 +46,9 @@ export default function MePage() {
   }
 
   const initial = profile.nickname.trim().slice(0, 1) || "다"
+  const linked = session?.user.providers ?? []
+  const loginId = session?.user.loginId ?? ""
+  const emailLabel = profile.email || (session?.user.hasPassword ? "" : "소셜 가입")
 
   return (
     <div className="space-y-6">
@@ -86,10 +97,37 @@ export default function MePage() {
       <div className="space-y-2">
       <section className="overflow-hidden rounded-[20px] bg-card ring-1 ring-foreground/10">
         <div className="flex items-center justify-between gap-3 px-4 py-3.5">
-          <h2 className="shrink-0 text-sm font-medium">계정 정보</h2>
+          <h2 className="shrink-0 text-sm font-medium">아이디</h2>
           <p className="min-w-0 truncate text-right text-sm text-muted-foreground">
-            {profile.email}
+            {loginId}
           </p>
+        </div>
+
+        <div className="flex items-center justify-between gap-3 border-t border-[rgba(92,74,58,0.12)] px-4 py-3.5">
+          <h2 className="shrink-0 text-sm font-medium">이메일</h2>
+          <p className="min-w-0 truncate text-right text-sm text-muted-foreground">
+            {emailLabel || "없음"}
+          </p>
+        </div>
+
+        <div className="border-t border-[rgba(92,74,58,0.12)] px-4 py-3.5">
+          <h2 className="text-sm font-medium">소셜 연동</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {linked.length
+              ? linked.map((provider) => PROVIDER_LABEL[provider]).join(" · ")
+              : "아직 연동된 계정이 없습니다"}
+          </p>
+          {session ? (
+            <div className="mt-3">
+              <SocialAuthButtons
+                token={session.token}
+                mode="link"
+                providers={(["kakao", "naver", "google"] as Provider[]).filter(
+                  (provider) => !linked.includes(provider)
+                )}
+              />
+            </div>
+          ) : null}
         </div>
 
         <div className="flex items-center justify-between gap-3 border-t border-[rgba(92,74,58,0.12)] px-4 py-3.5">
@@ -125,7 +163,10 @@ export default function MePage() {
         <Button
           variant="ghost"
           className="h-auto border-0 bg-transparent px-0 text-sm text-[var(--destructive)] shadow-none hover:bg-transparent hover:text-[var(--destructive)]"
-          onClick={logout}
+          onClick={() => {
+            logout()
+            router.replace("/login")
+          }}
         >
           로그아웃
         </Button>

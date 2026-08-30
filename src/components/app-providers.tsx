@@ -5,7 +5,7 @@ import { DadokProvider, hydrateDadokStore } from "@/lib/store"
 
 export function AppProviders({ children }: { children: React.ReactNode }) {
   useEffect(() => {
-    hydrateDadokStore()
+    void hydrateDadokStore()
   }, [])
 
   return <DadokProvider>{children}</DadokProvider>
