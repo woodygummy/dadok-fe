@@ -64,7 +64,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <header className="w-full">
         <div className="mx-auto flex w-full max-w-md items-center justify-start px-6 pt-5">
           <Link href={session ? "/" : "/login"} aria-label="다독 홈" className="block">
-            <DadokLogo className={authPath ? "text-[2.15rem]" : "text-[1.55rem]"} />
+            <DadokLogo className={authPath ? "h-[4.75rem] w-[4.75rem]" : "h-14 w-14"} />
           </Link>
         </div>
       </header>
