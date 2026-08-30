@@ -3,16 +3,26 @@
 import { useEffect } from "react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import { BookMarked, Home, User } from "lucide-react"
+import { Home, User } from "lucide-react"
 import { DadokLogo } from "@/components/dadok-logo"
 import { SketchFilter } from "@/components/sketch-filter"
 import { isCapturePreview } from "@/lib/capture-preview"
 import { cn } from "@/lib/utils"
 import { useDadok } from "@/lib/store"
 
+function ShelfIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="none" aria-hidden>
+      <rect x="4" y="7" width="4" height="11" rx="1" stroke="currentColor" strokeWidth="1.8" />
+      <rect x="10" y="4" width="4" height="14" rx="1" stroke="currentColor" strokeWidth="1.8" />
+      <rect x="16" y="9" width="4" height="9" rx="1" stroke="currentColor" strokeWidth="1.8" />
+    </svg>
+  )
+}
+
 const NAV = [
   { href: "/", label: "나만의 서재", icon: Home },
-  { href: "/shelf", label: "나만의 책장", icon: BookMarked },
+  { href: "/shelf", label: "나만의 책장", icon: ShelfIcon },
   { href: "/me", label: "마이페이지", icon: User },
 ]
 
@@ -68,12 +78,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </Link>
         </div>
       </header>
-      <main className={cn("mx-auto w-full max-w-md flex-1 px-6 pt-3", authPath ? "pb-10" : "pb-24")}>
+      <main className={cn("mx-auto w-full max-w-md flex-1 px-6 pt-3", authPath ? "pb-10" : "pb-28")}>
         {children}
       </main>
       {authPath ? null : (
-        <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-[rgba(92,74,58,0.16)] bg-background/95 backdrop-blur">
-          <div className="mx-auto grid max-w-md grid-cols-3">
+        <nav className="fixed inset-x-0 bottom-5 z-40 flex justify-center px-8">
+          <div className="grid w-full max-w-[280px] grid-cols-3 rounded-full bg-[#3b2414] px-5 py-3.5 shadow-[0_10px_24px_rgba(59,36,20,0.22)]">
             {NAV.map((item) => {
               const Icon = item.icon
               const active =
@@ -86,8 +96,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   href={item.href}
                   aria-label={item.label}
                   className={cn(
-                    "flex flex-col items-center py-3",
-                    active ? "text-primary" : "text-muted-foreground"
+                    "flex items-center justify-center",
+                    active ? "text-[#f3ede3]" : "text-[#c5b8a8]"
                   )}
                 >
                   <Icon className="size-5" />
