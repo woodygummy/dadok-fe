@@ -35,7 +35,12 @@ export function PasswordInput({
         autoComplete={autoComplete}
         aria-invalid={invalid || undefined}
         aria-describedby={describedBy}
-        className={cn(fieldClass, "pr-12")}
+        className={cn(
+          fieldClass,
+          "pr-12",
+          !visible &&
+            "font-[Verdana,sans-serif] tracking-[0.28em] [-webkit-text-security:disc]"
+        )}
       />
       <button
         type="button"
@@ -44,7 +49,7 @@ export function PasswordInput({
         aria-label={visible ? "비밀번호 가리기" : "비밀번호 보기"}
         aria-pressed={visible}
       >
-        {visible ? <EyeOff className="size-5" /> : <Eye className="size-5" />}
+        {visible ? <Eye className="size-5" /> : <EyeOff className="size-5" />}
       </button>
     </div>
   )
