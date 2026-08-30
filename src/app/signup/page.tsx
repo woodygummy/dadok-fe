@@ -63,7 +63,9 @@ export default function SignupPage() {
       router.replace("/")
     } catch (err) {
       const message =
-        err instanceof AuthError ? err.message : "회원가입에 실패했습니다."
+        err instanceof AuthError
+          ? err.message
+          : "회원가입에 실패했습니다. 잠시 후 다시 시도해 주세요."
       const mapped = fieldErrorFromMessage(message)
       if (Object.keys(mapped).length > 0) setErrors(mapped)
       else setFormError(message)

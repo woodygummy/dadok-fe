@@ -16,24 +16,34 @@ type AuthResponse = {
   user: AuthUser
 }
 
+const CONNECT_ERROR =
+  "서버에 연결하지 못했습니다. 백엔드가 실행 중인지 확인해 주세요."
+
 async function readError(response: Response) {
   try {
     const data = (await response.json()) as { error?: string }
-    return data.error || "요청에 실패했습니다."
+    if (data.error) return data.error
   } catch {
-    return "요청에 실패했습니다."
+    // fall through to status-based copy
   }
+  if (response.status >= 500) {
+    return "서버에서 요청을 처리하지 못했습니다. 잠시 후 다시 시도해 주세요."
+  }
+  return "요청에 실패했습니다. 입력 내용을 확인하고 다시 시도해 주세요."
 }
 
 async function request(path: string, init?: RequestInit) {
-  const response = await fetch(`${API_BASE}${path}`, {
-    ...init,
-    headers: {
-      "Content-Type": "application/json",
-      ...(init?.headers ?? {}),
-    },
-  })
-  return response
+  try {
+    return await fetch(`${API_BASE}${path}`, {
+      ...init,
+      headers: {
+        "Content-Type": "application/json",
+        ...(init?.headers ?? {}),
+      },
+    })
+  } catch {
+    throw new AuthError(CONNECT_ERROR, 0)
+  }
 }
 
 export async function registerAccount(input: {

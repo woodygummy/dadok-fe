@@ -8,26 +8,67 @@ import { SocialAuthButtons } from "@/components/social-auth-buttons"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { AuthError } from "@/lib/auth-api"
+import {
+  loginErrorFromMessage,
+  validateLoginFields,
+  type LoginFieldErrors,
+} from "@/lib/auth-validate"
 import { useDadok } from "@/lib/store"
 import { cn } from "@/lib/utils"
+
+const fieldClass =
+  "h-14 rounded-[14px] border-0 bg-transparent px-4 shadow-none focus-visible:border-transparent focus-visible:ring-0 dark:bg-transparent"
+
+function FieldHint({ id, message }: { id: string; message?: string }) {
+  if (!message) return null
+  return (
+    <p id={id} className="px-1 text-sm text-[var(--destructive)]">
+      {message}
+    </p>
+  )
+}
 
 export default function LoginPage() {
   const router = useRouter()
   const { login } = useDadok()
   const [loginId, setLoginId] = useState("")
   const [password, setPassword] = useState("")
-  const [error, setError] = useState("")
+  const [errors, setErrors] = useState<LoginFieldErrors>({})
+  const [formError, setFormError] = useState("")
   const [pending, setPending] = useState(false)
+
+  function clearField(field: keyof LoginFieldErrors) {
+    setErrors((current) => {
+      if (!current[field]) return current
+      const next = { ...current }
+      delete next[field]
+      return next
+    })
+  }
 
   async function onSubmit(event: React.FormEvent) {
     event.preventDefault()
-    setError("")
+    const nextErrors = validateLoginFields({ loginId, password })
+    if (Object.keys(nextErrors).length > 0) {
+      setFormError("")
+      setErrors(nextErrors)
+      return
+    }
+
+    setErrors({})
+    setFormError("")
     setPending(true)
     try {
       await login(loginId, password)
       router.replace("/")
     } catch (err) {
-      setError(err instanceof AuthError ? err.message : "로그인에 실패했습니다.")
+      const message =
+        err instanceof AuthError
+          ? err.message
+          : "로그인에 실패했습니다. 잠시 후 다시 시도해 주세요."
+      const mapped = loginErrorFromMessage(message)
+      if (Object.keys(mapped).length > 0) setErrors(mapped)
+      else setFormError(message)
     } finally {
       setPending(false)
     }
@@ -35,7 +76,7 @@ export default function LoginPage() {
 
   return (
     <div className="pt-10">
-      <form onSubmit={onSubmit} className="space-y-7">
+      <form onSubmit={onSubmit} noValidate className="space-y-7">
         <div className="space-y-2.5">
           <Label htmlFor="loginId" className="px-1 text-[15px] text-[var(--wood-deep)]">
             아이디
@@ -44,12 +85,17 @@ export default function LoginPage() {
             <Input
               id="loginId"
               value={loginId}
-              onChange={(event) => setLoginId(event.target.value)}
+              onChange={(event) => {
+                setLoginId(event.target.value)
+                clearField("loginId")
+              }}
               autoComplete="username"
-              className="h-14 rounded-[14px] border-0 bg-transparent px-4 shadow-none focus-visible:border-transparent focus-visible:ring-0 dark:bg-transparent"
-              required
+              aria-invalid={Boolean(errors.loginId) || undefined}
+              aria-describedby={errors.loginId ? "loginId-error" : undefined}
+              className={fieldClass}
             />
           </div>
+          <FieldHint id="loginId-error" message={errors.loginId} />
         </div>
         <div className="space-y-2.5">
           <Label htmlFor="password" className="px-1 text-[15px] text-[var(--wood-deep)]">
@@ -59,12 +105,20 @@ export default function LoginPage() {
             <PasswordInput
               id="password"
               value={password}
-              onChange={setPassword}
+              onChange={(value) => {
+                setPassword(value)
+                clearField("password")
+              }}
               autoComplete="current-password"
+              invalid={Boolean(errors.password)}
+              describedBy={errors.password ? "password-error" : undefined}
             />
           </div>
+          <FieldHint id="password-error" message={errors.password} />
         </div>
-        {error ? <p className="text-sm text-[var(--destructive)]">{error}</p> : null}
+        {formError ? (
+          <p className="text-sm text-[var(--destructive)]">{formError}</p>
+        ) : null}
         <button
           type="submit"
           disabled={pending}
