@@ -5,14 +5,15 @@ import { ChevronRight } from "lucide-react"
 import { useDadok } from "@/lib/store"
 import { THEME_LABEL } from "@/lib/types"
 
-const MENU = [
-  { href: "/me/account", label: "내 계정" },
-  { href: "/me/notifications", label: "알림 설정" },
-  { href: "/me/inquiry", label: "문의하기" },
-] as const
-
 export default function MePage() {
-  const { profile } = useDadok()
+  const { profile, session } = useDadok()
+  const inquiryHref = session?.user.isAdmin ? "/me/inquiries" : "/me/inquiry"
+
+  const menu = [
+    { href: "/me/account", label: "내 계정" },
+    { href: "/me/notifications", label: "알림 설정" },
+    { href: inquiryHref, label: "문의 사항" },
+  ]
 
   return (
     <div className="flex flex-col items-center pt-6">
@@ -29,8 +30,8 @@ export default function MePage() {
 
       <nav className="mt-14 w-full max-w-[17.75rem]">
         <ul className="sketch-frame overflow-hidden rounded-[18px] bg-[var(--niche)]">
-          {MENU.map((item, index) => (
-            <li key={item.href}>
+          {menu.map((item, index) => (
+            <li key={item.label}>
               {index > 0 ? <div className="sketch-line mx-4" /> : null}
               <Link
                 href={item.href}

@@ -5,6 +5,7 @@ import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { Home, User } from "lucide-react"
 import { DadokLogo } from "@/components/dadok-logo"
+import { HeaderBell } from "@/components/header-bell"
 import { SketchFilter } from "@/components/sketch-filter"
 import { isCapturePreview } from "@/lib/capture-preview"
 import { cn } from "@/lib/utils"
@@ -72,10 +73,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     <div className="flex min-h-full flex-col">
       <SketchFilter />
       <header className="w-full">
-        <div className="mx-auto flex w-full max-w-md items-center justify-start px-6 pt-5">
+        <div className="mx-auto flex w-full max-w-md items-center justify-between px-6 pt-5">
           <Link href={session ? "/" : "/login"} aria-label="다독 홈" className="block">
             <DadokLogo className={authPath ? "h-[4.75rem] w-[4.75rem]" : "h-14 w-14"} />
           </Link>
+          {session && !authPath ? <HeaderBell /> : null}
         </div>
       </header>
       <main className={cn("mx-auto w-full max-w-md flex-1 px-6 pt-3", authPath ? "pb-10" : "pb-28")}>

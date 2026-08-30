@@ -9,6 +9,7 @@ export type AuthUser = {
   nickname: string
   providers: Provider[]
   hasPassword: boolean
+  isAdmin: boolean
 }
 
 export type Session = {

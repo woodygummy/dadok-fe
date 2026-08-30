@@ -91,6 +91,7 @@ export function capturePreviewState(): DadokState {
         nickname: "다독이",
         providers: ["kakao"],
         hasPassword: true,
+        isAdmin: false,
       },
     },
   }
