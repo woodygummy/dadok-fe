@@ -1,5 +1,22 @@
 export type ThemeName = "white" | "dark" | "wood"
 
+export type Provider = "kakao" | "google" | "naver"
+
+export type AuthUser = {
+  id: string
+  loginId: string
+  email: string
+  nickname: string
+  providers: Provider[]
+  hasPassword: boolean
+  isAdmin: boolean
+}
+
+export type Session = {
+  token: string
+  user: AuthUser
+}
+
 export type Book = {
   id: string
   googleId: string
@@ -19,11 +36,12 @@ export type Profile = {
 export type DadokState = {
   books: Book[]
   profile: Profile
+  session: Session | null
 }
 
 export const DEFAULT_PROFILE: Profile = {
   nickname: "다독이",
-  email: "guest@dadok.app",
+  email: "",
   theme: "white",
   avatarUrl: null,
 }

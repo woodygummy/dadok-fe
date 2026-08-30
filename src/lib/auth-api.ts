@@ -1,0 +1,93 @@
+import type { AuthUser, Provider } from "@/lib/types"
+
+export const API_BASE =
+  process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") || "http://localhost:8787"
+
+export class AuthError extends Error {
+  status: number
+  constructor(message: string, status: number) {
+    super(message)
+    this.status = status
+  }
+}
+
+type AuthResponse = {
+  token: string
+  user: AuthUser
+}
+
+const CONNECT_ERROR =
+  "서버에 연결하지 못했습니다. 백엔드가 실행 중인지 확인해 주세요."
+
+async function readError(response: Response) {
+  try {
+    const data = (await response.json()) as { error?: string }
+    if (data.error) return data.error
+  } catch {
+    // fall through to status-based copy
+  }
+  if (response.status >= 500) {
+    return "서버에서 요청을 처리하지 못했습니다. 잠시 후 다시 시도해 주세요."
+  }
+  return "요청에 실패했습니다. 입력 내용을 확인하고 다시 시도해 주세요."
+}
+
+async function request(path: string, init?: RequestInit) {
+  try {
+    return await fetch(`${API_BASE}${path}`, {
+      ...init,
+      headers: {
+        "Content-Type": "application/json",
+        ...(init?.headers ?? {}),
+      },
+    })
+  } catch {
+    throw new AuthError(CONNECT_ERROR, 0)
+  }
+}
+
+export async function registerAccount(input: {
+  loginId: string
+  password: string
+  email: string
+}): Promise<AuthResponse> {
+  const response = await request("/auth/register", {
+    method: "POST",
+    body: JSON.stringify(input),
+  })
+  if (!response.ok) {
+    throw new AuthError(await readError(response), response.status)
+  }
+  return (await response.json()) as AuthResponse
+}
+
+export async function loginAccount(
+  loginId: string,
+  password: string
+): Promise<AuthResponse> {
+  const response = await request("/auth/login", {
+    method: "POST",
+    body: JSON.stringify({ loginId, password }),
+  })
+  if (!response.ok) {
+    throw new AuthError(await readError(response), response.status)
+  }
+  return (await response.json()) as AuthResponse
+}
+
+export async function fetchMe(token: string): Promise<AuthUser> {
+  const response = await request("/auth/me", {
+    headers: { Authorization: `Bearer ${token}` },
+  })
+  if (!response.ok) {
+    throw new AuthError(await readError(response), response.status)
+  }
+  const data = (await response.json()) as { user: AuthUser }
+  return data.user
+}
+
+export function oauthStartUrl(provider: Provider, token?: string) {
+  const url = new URL(`${API_BASE}/auth/${provider}/start`)
+  if (token) url.searchParams.set("token", token)
+  return url.toString()
+}
