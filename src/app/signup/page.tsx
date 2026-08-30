@@ -1,8 +1,8 @@
 "use client"
 
 import { useState } from "react"
-import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { BackLink } from "@/components/back-link"
 import { PasswordInput } from "@/components/password-input"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -75,8 +75,9 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="flex min-h-[calc(100dvh-7.5rem)] flex-col pt-10">
-      <form onSubmit={onSubmit} noValidate className="space-y-7">
+    <div className="flex min-h-[calc(100dvh-7.5rem)] flex-col pt-4">
+      <BackLink href="/login" />
+      <form onSubmit={onSubmit} noValidate className="mt-6 space-y-7">
         <div className="space-y-2.5">
           <Label htmlFor="loginId" className="px-1 text-[15px] text-[var(--wood-deep)]">
             아이디
@@ -151,12 +152,6 @@ export default function SignupPage() {
           {pending ? "만드는 중…" : "회원가입"}
         </button>
       </form>
-
-      <p className="mt-auto pb-6 pt-10 text-center">
-        <Link href="/login" className="text-[15px] text-[var(--muted-ink)]">
-          이전
-        </Link>
-      </p>
     </div>
   )
 }

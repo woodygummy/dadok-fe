@@ -1,7 +1,7 @@
 "use client"
 
-import Link from "next/link"
 import { Check } from "lucide-react"
+import { BackLink } from "@/components/back-link"
 import { useDadok } from "@/lib/store"
 import { THEME_LABEL, type ThemeName } from "@/lib/types"
 
@@ -12,9 +12,7 @@ export default function ThemePage() {
 
   return (
     <div className="space-y-6">
-      <Link href="/me" className="text-sm text-muted-foreground">
-        이전
-      </Link>
+      <BackLink href="/me" />
       <h1 className="text-lg font-medium">테마</h1>
       <ul className="sketch-frame overflow-hidden rounded-[18px] bg-[var(--niche)]">
         {THEMES.map((theme, index) => (

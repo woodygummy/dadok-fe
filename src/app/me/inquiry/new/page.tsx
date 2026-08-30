@@ -1,8 +1,8 @@
 "use client"
 
 import { useEffect } from "react"
-import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { BackLink } from "@/components/back-link"
 import { InquiryCompose } from "@/components/inquiry-compose"
 import { useDadok } from "@/lib/store"
 
@@ -18,9 +18,7 @@ export default function NewInquiryPage() {
 
   return (
     <div className="space-y-6">
-      <Link href="/me/inquiry" className="text-sm text-muted-foreground">
-        이전
-      </Link>
+      <BackLink href="/me/inquiry" />
       <h1 className="text-lg font-medium">문의하기</h1>
       <InquiryCompose token={session.token} onSent={(id) => router.replace(`/me/inquiry/${id}`)} />
     </div>

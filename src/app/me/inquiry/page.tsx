@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Pencil, ChevronRight } from "lucide-react"
+import { BackLink } from "@/components/back-link"
 import { AuthError } from "@/lib/auth-api"
 import { fetchInquiries, type InquirySummary } from "@/lib/inquiry-api"
 import { useDadok } from "@/lib/store"
@@ -31,9 +32,7 @@ export default function InquiryPage() {
 
   return (
     <div className="space-y-6">
-      <Link href="/me" className="text-sm text-muted-foreground">
-        이전
-      </Link>
+      <BackLink href="/me" />
       <h1 className="text-lg font-medium">문의하기</h1>
       {error ? <p className="text-sm text-[var(--destructive)]">{error}</p> : null}
       {items.length === 0 ? (

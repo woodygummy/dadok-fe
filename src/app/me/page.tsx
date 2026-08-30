@@ -1,7 +1,7 @@
 "use client"
 
-import Link from "next/link"
 import { ChevronRight } from "lucide-react"
+import Link from "next/link"
 import { useDadok } from "@/lib/store"
 import { THEME_LABEL } from "@/lib/types"
 
@@ -19,19 +19,8 @@ export default function MePage() {
   ]
 
   return (
-    <div className="flex flex-col items-center pt-6">
-      <Link
-        href="/me/account"
-        aria-label="내 계정"
-        className="size-[7.25rem] overflow-hidden rounded-full bg-[#d8d4cf]"
-      >
-        {profile.avatarUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={profile.avatarUrl} alt="" className="size-full object-cover" />
-        ) : null}
-      </Link>
-
-      <nav className="mt-14 w-full max-w-[17.75rem]">
+    <div className="flex flex-col items-center pt-4">
+      <nav className="w-full max-w-[17.75rem]">
         <ul className="sketch-frame overflow-hidden rounded-[18px] bg-[var(--niche)]">
           {menu.map((item, index) => (
             <li key={item.label}>

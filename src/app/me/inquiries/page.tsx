@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { BackLink } from "@/components/back-link"
 import { AuthError } from "@/lib/auth-api"
 import { fetchInquiries, type InquirySummary } from "@/lib/inquiry-api"
 import { useDadok } from "@/lib/store"
@@ -30,9 +31,7 @@ export default function InquiriesInboxPage() {
 
   return (
     <div className="space-y-6">
-      <Link href="/me" className="text-sm text-muted-foreground">
-        이전
-      </Link>
+      <BackLink href="/me" />
       <h1 className="text-lg font-medium">문의 사항</h1>
       {error ? <p className="text-sm text-[var(--destructive)]">{error}</p> : null}
       {items.length === 0 ? (

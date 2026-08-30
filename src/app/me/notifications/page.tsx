@@ -1,8 +1,8 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import Link from "next/link"
 import { cn } from "@/lib/utils"
+import { BackLink } from "@/components/back-link"
 
 const STORAGE_KEY = "dadok-notifications"
 const DEFAULTS = { reminder: true, notice: true }
@@ -36,9 +36,7 @@ export default function NotificationsPage() {
 
   return (
     <div className="space-y-6">
-      <Link href="/me" className="text-sm text-muted-foreground">
-        이전
-      </Link>
+      <BackLink href="/me" />
       <h1 className="text-lg font-medium">알림 설정</h1>
       <ul className="sketch-frame overflow-hidden rounded-[18px] bg-[var(--niche)]">
         {(

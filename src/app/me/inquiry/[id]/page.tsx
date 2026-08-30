@@ -1,7 +1,7 @@
 "use client"
 
 import { use, useEffect, useState } from "react"
-import Link from "next/link"
+import { BackLink } from "@/components/back-link"
 import { InquiryImage } from "@/components/inquiry-image"
 import { ImagePicker, type PickedImage } from "@/components/image-picker"
 import { AuthError } from "@/lib/auth-api"
@@ -56,11 +56,11 @@ export default function InquiryThreadPage({
 
   const backHref = session?.user.isAdmin ? "/me/inquiries" : "/me/inquiry"
 
+  const hasReply = inquiry?.messages.some((message) => message.role === "admin") ?? false
+
   return (
     <div className="space-y-6">
-      <Link href={backHref} className="text-sm text-muted-foreground">
-        이전
-      </Link>
+      <BackLink href={backHref} />
       <div>
         <h1 className="text-lg font-medium">{session?.user.isAdmin ? "문의 보기" : "내 문의"}</h1>
         {inquiry && session?.user.isAdmin ? (
@@ -95,7 +95,7 @@ export default function InquiryThreadPage({
 
       {error ? <p className="text-sm text-[var(--destructive)]">{error}</p> : null}
 
-      {session?.user.isAdmin ? (
+      {session?.user.isAdmin && !hasReply ? (
         <form onSubmit={onReply} className="space-y-3">
           <div className="sketch-frame rounded-[14px]">
             <textarea

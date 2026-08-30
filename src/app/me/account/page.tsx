@@ -1,9 +1,9 @@
 "use client"
 
 import { useEffect, useState, type ChangeEvent } from "react"
-import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Pencil } from "lucide-react"
+import { BackLink } from "@/components/back-link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { SocialAuthButtons } from "@/components/social-auth-buttons"
@@ -52,9 +52,7 @@ export default function AccountPage() {
 
   return (
     <div className="space-y-6">
-      <Link href="/me" className="text-sm text-muted-foreground">
-        이전
-      </Link>
+      <BackLink href="/me" />
 
       <div className="flex flex-col items-center gap-2">
         <div className="relative size-24">
