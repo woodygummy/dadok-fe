@@ -1,9 +1,11 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { SketchFrame } from "@/components/sketch-stroke"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogTitle,
   DialogTrigger,
@@ -12,7 +14,7 @@ import { Input } from "@/components/ui/input"
 import { searchBooks, type SearchBook } from "@/lib/api"
 import { useDadok } from "@/lib/store"
 import { BOOK_LIMIT } from "@/lib/types"
-import { Plus } from "lucide-react"
+import { Plus, X } from "lucide-react"
 
 export function AddBookDialog({
   onAdded,
@@ -104,21 +106,40 @@ export function AddBookDialog({
       >
         <Plus className="size-6" />
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent
+        showCloseButton={false}
+        className="sketch-frame overflow-visible rounded-[24px] bg-[var(--niche)] p-5 ring-0 sm:max-w-md"
+      >
         <DialogTitle className="sr-only">책 검색</DialogTitle>
-        <Input
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-          onInput={(event) => {
-            const value = (event.target as HTMLInputElement).value
-            setQuery(value)
-          }}
-          onKeyDown={(event) => {
-            if (event.key === "Enter") event.preventDefault()
-          }}
-          placeholder="책 제목 또는 저자"
-          autoFocus
-        />
+        <div className="flex items-center gap-3">
+          <SketchFrame className="min-w-0 flex-1 rounded-[16px]">
+            <Input
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              onInput={(event) => {
+                const value = (event.target as HTMLInputElement).value
+                setQuery(value)
+              }}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") event.preventDefault()
+              }}
+              placeholder="제목 또는 저자 검색"
+              autoFocus
+              className="h-12 rounded-[16px] border-0 bg-transparent px-4 shadow-none focus-visible:border-transparent focus-visible:ring-0 dark:bg-transparent"
+            />
+          </SketchFrame>
+          <DialogClose
+            render={
+              <button
+                type="button"
+                className="flex size-10 shrink-0 items-center justify-center text-[var(--sketch-stroke)]"
+                aria-label="닫기"
+              />
+            }
+          >
+            <X className="size-5" strokeWidth={2} />
+          </DialogClose>
+        </div>
         {loading ? (
           <p className="text-sm text-muted-foreground">검색 중…</p>
         ) : null}
