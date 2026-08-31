@@ -145,53 +145,53 @@ export function AddBookDialog({
         ) : null}
         {error ? <p className="text-sm text-destructive">{error}</p> : null}
         {message ? <p className="text-sm text-muted-foreground">{message}</p> : null}
-        <ul className="h-[19.5rem] space-y-2 overflow-y-auto">
-          {results.map((item) => {
+        <ul className="no-scrollbar h-[19.5rem] overflow-y-auto">
+          {results.map((item, index) => {
             const already = books.some((book) => book.googleId === item.id)
             return (
-              <li
-                key={item.id}
-                className="flex items-center gap-2 rounded-xl bg-muted/60 p-2"
-              >
-                {item.thumbnail ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={item.thumbnail}
-                    alt=""
-                    className="h-14 w-10 shrink-0 rounded object-cover"
-                  />
-                ) : (
-                  <span className="h-14 w-10 shrink-0 rounded bg-[var(--wood)]" />
-                )}
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate text-sm font-medium">
-                    {item.title}
+              <li key={item.id}>
+                {index > 0 ? <div className="sketch-line" /> : null}
+                <div className="flex items-center gap-2 py-3">
+                  {item.thumbnail ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={item.thumbnail}
+                      alt=""
+                      className="h-14 w-10 shrink-0 rounded object-cover"
+                    />
+                  ) : (
+                    <span className="h-14 w-10 shrink-0 rounded bg-[var(--wood)]" />
+                  )}
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-sm font-medium">
+                      {item.title}
+                    </span>
+                    <span className="block truncate text-xs text-muted-foreground">
+                      {item.authors}
+                    </span>
                   </span>
-                  <span className="block truncate text-xs text-muted-foreground">
-                    {item.authors}
-                  </span>
-                </span>
-                {already ? (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="shrink-0"
-                    onClick={() => handleRemove(item)}
-                  >
-                    빼기
-                  </Button>
-                ) : (
-                  <Button
-                    type="button"
-                    size="sm"
-                    className="shrink-0"
-                    disabled={books.length >= BOOK_LIMIT}
-                    onClick={() => handleAdd(item)}
-                  >
-                    추가
-                  </Button>
-                )}
+                  {already ? (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="shrink-0"
+                      onClick={() => handleRemove(item)}
+                    >
+                      빼기
+                    </Button>
+                  ) : (
+                    <Button
+                      type="button"
+                      size="sm"
+                      className="shrink-0"
+                      disabled={books.length >= BOOK_LIMIT}
+                      onClick={() => handleAdd(item)}
+                    >
+                      추가
+                    </Button>
+                  )}
+                </div>
               </li>
             )
           })}
