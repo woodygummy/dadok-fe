@@ -31,7 +31,7 @@ export default function AlertsPage() {
       {items.length === 0 ? (
         <p className="text-sm text-muted-foreground">알림이 없습니다.</p>
       ) : (
-        <ul className="sketch-frame overflow-hidden rounded-[18px] bg-[var(--niche)]">
+        <ul className="sketch-frame rounded-[18px] bg-[var(--niche)]">
           {items.map((item, index) => (
             <li key={item.id}>
               {index > 0 ? <div className="sketch-line mx-4" /> : null}

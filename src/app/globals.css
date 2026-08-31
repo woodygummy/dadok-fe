@@ -66,6 +66,7 @@
   --sage: #7a8f72;
   --terracotta: #c45c26;
   --muted-ink: #5c4a3a;
+  --sketch-stroke: #2c2926;
 }
 
 [data-theme="wood"] {
@@ -95,6 +96,7 @@
   --sage: #3d6b4f;
   --terracotta: #c45c26;
   --muted-ink: #5c4a3a;
+  --sketch-stroke: #2c2926;
 }
 
 [data-theme="dark"] {
@@ -124,6 +126,7 @@
   --sage: #7a8f72;
   --terracotta: #c4785a;
   --muted-ink: #c5b8a8;
+  --sketch-stroke: #e8ddd0;
 }
 
 @keyframes shelf-in {
@@ -152,24 +155,32 @@
 @layer components {
   .sketch-frame {
     position: relative;
+    overflow: visible;
   }
 
-  .sketch-frame::after {
+  .sketch-frame::after,
+  .sketch-stroke {
     content: "";
     position: absolute;
-    inset: 0;
-    border: 2.5px solid #2c2926;
-    border-radius: inherit;
+    inset: -7px;
+    z-index: 1;
     pointer-events: none;
-    filter: url(#dadok-sketch);
+    border: 24px solid transparent;
+    background-color: var(--sketch-stroke, #2c2926);
+    display: block;
+    -webkit-mask-box-image: url("/sketch-frame-scatter.svg") 40 stretch;
+    mask-border-source: url("/sketch-frame-scatter.svg");
+    mask-border-slice: 40;
+    mask-border-width: 24px;
+    mask-border-repeat: stretch;
+  }
+
+  .sketch-stroke {
+    content: none;
   }
 
   .sketch-frame-fill {
     background: #4a3428;
-  }
-
-  [data-theme="dark"] .sketch-frame::after {
-    border-color: #e8ddd0;
   }
 
   [data-theme="dark"] .sketch-frame-fill {
@@ -177,13 +188,13 @@
   }
 
   .sketch-line {
-    height: 1.5px;
-    background: #2c2926;
-    filter: url(#dadok-sketch);
-    opacity: 0.75;
-  }
-
-  [data-theme="dark"] .sketch-line {
-    background: #e8ddd0;
+    height: 10px;
+    background-color: var(--sketch-stroke, #2c2926);
+    -webkit-mask-image: url("/sketch-line-scatter.svg");
+    mask-image: url("/sketch-line-scatter.svg");
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-size: 100% 100%;
+    mask-size: 100% 100%;
   }
 }

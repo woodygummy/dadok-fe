@@ -43,7 +43,7 @@ export default function InquiryPage() {
             <li key={item.id}>
               <Link
                 href={`/me/inquiry/${item.id}`}
-                className="sketch-frame flex items-center overflow-hidden rounded-[18px] bg-[var(--niche)]"
+                className="sketch-frame flex items-center rounded-[18px] bg-[var(--niche)]"
               >
                 <span className="min-w-0 flex-1 px-5 py-3.5">
                   <span className="flex gap-2 text-[15px]">

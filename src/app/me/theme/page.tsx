@@ -14,7 +14,7 @@ export default function ThemePage() {
     <div className="space-y-6">
       <BackLink href="/me" />
       <h1 className="text-lg font-medium">테마</h1>
-      <ul className="sketch-frame overflow-hidden rounded-[18px] bg-[var(--niche)]">
+      <ul className="sketch-frame rounded-[18px] bg-[var(--niche)]">
         {THEMES.map((theme, index) => (
           <li key={theme}>
             {index > 0 ? <div className="sketch-line mx-4" /> : null}

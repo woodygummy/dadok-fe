@@ -92,7 +92,7 @@ export default function AccountPage() {
         />
       </div>
 
-      <section className="sketch-frame overflow-hidden rounded-[18px] bg-[var(--niche)]">
+      <section className="sketch-frame rounded-[18px] bg-[var(--niche)]">
         <div className="flex items-center justify-between gap-3 px-4 py-3.5">
           <h2 className="shrink-0 text-sm font-medium">아이디</h2>
           <p className="min-w-0 truncate text-right text-sm text-muted-foreground">{loginId}</p>

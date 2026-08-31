@@ -38,7 +38,7 @@ export default function NotificationsPage() {
     <div className="space-y-6">
       <BackLink href="/me" />
       <h1 className="text-lg font-medium">알림 설정</h1>
-      <ul className="sketch-frame overflow-hidden rounded-[18px] bg-[var(--niche)]">
+      <ul className="sketch-frame rounded-[18px] bg-[var(--niche)]">
         {(
           [
             { key: "reminder", label: "독서 리마인드" },

@@ -14,6 +14,7 @@ import {
   type LoginFieldErrors,
 } from "@/lib/auth-validate"
 import { useDadok } from "@/lib/store"
+import { SketchFrame } from "@/components/sketch-stroke"
 import { cn } from "@/lib/utils"
 
 const fieldClass =
@@ -81,7 +82,7 @@ export default function LoginPage() {
           <Label htmlFor="loginId" className="px-1 text-[15px] text-[var(--wood-deep)]">
             아이디
           </Label>
-          <div className="sketch-frame rounded-[14px]">
+          <SketchFrame className="rounded-[14px]">
             <Input
               id="loginId"
               value={loginId}
@@ -94,14 +95,14 @@ export default function LoginPage() {
               aria-describedby={errors.loginId ? "loginId-error" : undefined}
               className={fieldClass}
             />
-          </div>
+          </SketchFrame>
           <FieldHint id="loginId-error" message={errors.loginId} />
         </div>
         <div className="space-y-2.5">
           <Label htmlFor="password" className="px-1 text-[15px] text-[var(--wood-deep)]">
             비밀번호
           </Label>
-          <div className="sketch-frame rounded-[14px]">
+          <SketchFrame className="rounded-[14px]">
             <PasswordInput
               id="password"
               value={password}
@@ -113,22 +114,24 @@ export default function LoginPage() {
               invalid={Boolean(errors.password)}
               describedBy={errors.password ? "password-error" : undefined}
             />
-          </div>
+          </SketchFrame>
           <FieldHint id="password-error" message={errors.password} />
         </div>
         {formError ? (
           <p className="text-sm text-[var(--destructive)]">{formError}</p>
         ) : null}
-        <button
-          type="submit"
-          disabled={pending}
-          className={cn(
-            "sketch-frame sketch-frame-fill mt-2 h-14 w-full rounded-[14px] text-[15px] font-medium text-[#FFF8F0]",
-            "disabled:opacity-60"
-          )}
-        >
-          {pending ? "들어가는 중…" : "로그인"}
-        </button>
+        <SketchFrame className="mt-2 h-14 w-full rounded-[14px]">
+          <button
+            type="submit"
+            disabled={pending}
+            className={cn(
+              "sketch-frame-fill flex h-full w-full items-center justify-center text-[15px] font-medium text-[#FFF8F0]",
+              "disabled:opacity-60"
+            )}
+          >
+            {pending ? "들어가는 중…" : "로그인"}
+          </button>
+        </SketchFrame>
       </form>
 
       <p className="mt-6 text-center text-[13px] text-[var(--muted-ink)]">

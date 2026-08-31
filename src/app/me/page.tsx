@@ -21,7 +21,7 @@ export default function MePage() {
   return (
     <div className="flex flex-col items-center pt-4">
       <nav className="w-full max-w-[17.75rem]">
-        <ul className="sketch-frame overflow-hidden rounded-[18px] bg-[var(--niche)]">
+        <ul className="sketch-frame rounded-[18px] bg-[var(--niche)]">
           {menu.map((item, index) => (
             <li key={item.label}>
               {index > 0 ? <div className="sketch-line mx-4" /> : null}

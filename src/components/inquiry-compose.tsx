@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { ImagePicker, type PickedImage } from "@/components/image-picker"
+import { SketchFrame } from "@/components/sketch-stroke"
 import { AuthError } from "@/lib/auth-api"
 import { createInquiry, fileToInquiryImage } from "@/lib/inquiry-api"
 
@@ -37,7 +38,7 @@ export function InquiryCompose({
 
   return (
     <form onSubmit={onSubmit} className="space-y-3">
-      <div className="sketch-frame rounded-[14px]">
+      <SketchFrame className="rounded-[14px]">
         <textarea
           value={body}
           onChange={(event) => setBody(event.target.value)}
@@ -46,16 +47,18 @@ export function InquiryCompose({
           placeholder="불편한 점이나 제안, 오류가 난 상황을 적어 주세요."
           className="min-h-[8rem] w-full resize-none bg-transparent px-4 py-3 text-[15px] outline-none"
         />
-      </div>
+      </SketchFrame>
       <ImagePicker images={images} onChange={setImages} />
       {error ? <p className="text-sm text-[var(--destructive)]">{error}</p> : null}
-      <button
-        type="submit"
-        disabled={pending}
-        className="sketch-frame sketch-frame-fill flex h-14 w-full items-center justify-center rounded-[14px] text-[15px] font-medium text-[#FFF8F0] disabled:opacity-60"
-      >
-        {pending ? "보내는 중…" : "보내기"}
-      </button>
+      <SketchFrame className="h-14 w-full rounded-[14px]">
+        <button
+          type="submit"
+          disabled={pending}
+          className="sketch-frame-fill flex h-full w-full items-center justify-center text-[15px] font-medium text-[#FFF8F0] disabled:opacity-60"
+        >
+          {pending ? "보내는 중…" : "보내기"}
+        </button>
+      </SketchFrame>
     </form>
   )
 }
