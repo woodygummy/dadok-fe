@@ -76,6 +76,7 @@ export function isCapturePreview() {
 export function capturePreviewState(): DadokState {
   return {
     books: SAMPLE_BOOKS,
+    categories: [],
     profile: {
       nickname: "다독이",
       email: "dadok@example.com",

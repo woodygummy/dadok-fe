@@ -14,18 +14,22 @@ export function Bookshelf({
   compact = false,
   highlightId,
   showTitles = false,
+  books: booksOverride,
   onSelectBook,
 }: {
   compact?: boolean
   highlightId?: string | null
   showTitles?: boolean
+  books?: Book[]
   onSelectBook?: (book: Book) => void
 }) {
-  const { books } = useDadok()
+  const { books: allBooks } = useDadok()
+  const books = booksOverride ?? allBooks
   const rowRef = useRef<HTMLDivElement>(null)
   const bookWidth = compact ? 28 : 36
   const [booksPerRow, setBooksPerRow] = useState(6)
-  const [selected, setSelected] = useState<Book | null>(null)
+  const [selectedId, setSelectedId] = useState<string | null>(null)
+  const selected = allBooks.find((book) => book.id === selectedId) ?? null
 
   useEffect(() => {
     const el = rowRef.current
@@ -104,7 +108,7 @@ export function Bookshelf({
                           ? undefined
                           : () => {
                               onSelectBook?.(book)
-                              setSelected(book)
+                              setSelectedId(book.id)
                             }
                       }
                     />
@@ -121,7 +125,7 @@ export function Bookshelf({
           book={selected}
           open={selected !== null}
           onOpenChange={(next) => {
-            if (!next) setSelected(null)
+            if (!next) setSelectedId(null)
           }}
         />
       ) : null}

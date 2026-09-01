@@ -17,6 +17,11 @@ export type Session = {
   user: AuthUser
 }
 
+export type BookCategory = {
+  id: string
+  name: string
+}
+
 export type Book = {
   id: string
   googleId: string
@@ -26,6 +31,9 @@ export type Book = {
   addedAt: string
   spineColor?: string | null
   fromMillie?: boolean
+  reading?: boolean
+  memo?: string
+  categoryIds?: string[]
 }
 
 export type Profile = {
@@ -37,6 +45,7 @@ export type Profile = {
 
 export type DadokState = {
   books: Book[]
+  categories: BookCategory[]
   profile: Profile
   session: Session | null
 }
@@ -55,3 +64,5 @@ export const THEME_LABEL: Record<ThemeName, string> = {
 }
 
 export const BOOK_LIMIT = 100
+export const CATEGORY_LIMIT = 20
+export const CATEGORY_NAME_MAX = 16

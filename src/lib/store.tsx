@@ -19,7 +19,7 @@ import {
   saveState,
   saveToken,
 } from "@/lib/storage"
-import { BOOK_LIMIT, type Book, type DadokState, type ThemeName } from "@/lib/types"
+import { BOOK_LIMIT, CATEGORY_LIMIT, CATEGORY_NAME_MAX, type Book, type BookCategory, type DadokState, type ThemeName } from "@/lib/types"
 
 type AddBookInput = {
   googleId: string
@@ -28,12 +28,14 @@ type AddBookInput = {
   thumbnail: string | null
   spineColor?: string | null
   fromMillie?: boolean
+  categoryIds?: string[]
 }
 
 type StoreValue = {
   ready: boolean
   session: DadokState["session"]
   books: Book[]
+  categories: BookCategory[]
   profile: DadokState["profile"]
   login: (loginId: string, password: string) => Promise<void>
   register: (input: {
@@ -44,7 +46,13 @@ type StoreValue = {
   completeOAuth: (token: string) => Promise<void>
   refreshUser: () => Promise<void>
   addBook: (input: AddBookInput) => Book | null
+  updateBook: (
+    id: string,
+    patch: Partial<Pick<Book, "reading" | "memo" | "categoryIds">>
+  ) => void
   removeBook: (id: string) => void
+  addCategory: (name: string) => BookCategory | null
+  removeCategory: (id: string) => void
   setNickname: (nickname: string) => void
   setTheme: (theme: ThemeName) => void
   setAvatar: (avatarUrl: string | null) => void
@@ -86,6 +94,7 @@ async function applySession(token: string, user: NonNullable<DadokState["session
   const saved = loadState(user.id)
   commit({
     books: saved.books,
+    categories: saved.categories,
     profile: {
       ...saved.profile,
       nickname: saved.profile.nickname || user.nickname,
@@ -154,6 +163,9 @@ export function DadokProvider({ children }: { children: React.ReactNode }) {
       addedAt: new Date().toISOString(),
       spineColor: input.spineColor ?? null,
       fromMillie: Boolean(input.fromMillie),
+      reading: false,
+      memo: "",
+      categoryIds: input.categoryIds ?? [],
     }
     commit({
       ...snapshot,
@@ -162,10 +174,60 @@ export function DadokProvider({ children }: { children: React.ReactNode }) {
     return book
   }, [])
 
+  const updateBook = useCallback(
+    (
+      id: string,
+      patch: Partial<Pick<Book, "reading" | "memo" | "categoryIds">>
+    ) => {
+      commit({
+        ...snapshot,
+        books: snapshot.books.map((book) => {
+          if (book.id !== id) return book
+          return {
+            ...book,
+            ...patch,
+            memo: patch.memo != null ? patch.memo : book.memo,
+            categoryIds: patch.categoryIds ?? book.categoryIds,
+          }
+        }),
+      })
+    },
+    []
+  )
+
   const removeBook = useCallback((id: string) => {
     commit({
       ...snapshot,
       books: snapshot.books.filter((book) => book.id !== id),
+    })
+  }, [])
+
+  const addCategory = useCallback((name: string) => {
+    const trimmed = name.trim()
+    if (!trimmed) return null
+    if (snapshot.categories.length >= CATEGORY_LIMIT) return null
+    if (snapshot.categories.some((category) => category.name === trimmed)) {
+      return snapshot.categories.find((category) => category.name === trimmed) ?? null
+    }
+    const category: BookCategory = {
+      id: createId("cat"),
+      name: trimmed.slice(0, CATEGORY_NAME_MAX),
+    }
+    commit({
+      ...snapshot,
+      categories: [...snapshot.categories, category],
+    })
+    return category
+  }, [])
+
+  const removeCategory = useCallback((id: string) => {
+    commit({
+      ...snapshot,
+      categories: snapshot.categories.filter((category) => category.id !== id),
+      books: snapshot.books.map((book) => ({
+        ...book,
+        categoryIds: (book.categoryIds ?? []).filter((categoryId) => categoryId !== id),
+      })),
     })
   }, [])
 
@@ -205,13 +267,17 @@ export function DadokProvider({ children }: { children: React.ReactNode }) {
       ready,
       session: state.session,
       books: state.books,
+      categories: state.categories,
       profile: state.profile,
       login,
       register,
       completeOAuth,
       refreshUser,
       addBook,
+      updateBook,
       removeBook,
+      addCategory,
+      removeCategory,
       setNickname,
       setTheme,
       setAvatar,
@@ -221,13 +287,17 @@ export function DadokProvider({ children }: { children: React.ReactNode }) {
       ready,
       state.session,
       state.books,
+      state.categories,
       state.profile,
       login,
       register,
       completeOAuth,
       refreshUser,
       addBook,
+      updateBook,
       removeBook,
+      addCategory,
+      removeCategory,
       setNickname,
       setTheme,
       setAvatar,
@@ -259,6 +329,7 @@ export async function hydrateDadokStore() {
     const saved = loadState(user.id)
     snapshot = {
       books: saved.books,
+      categories: saved.categories,
       profile: {
         ...saved.profile,
         nickname: saved.profile.nickname || user.nickname,

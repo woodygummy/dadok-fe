@@ -22,8 +22,10 @@ import { ChevronLeft, Plus, Shuffle, X } from "lucide-react"
 
 export function AddBookDialog({
   onAdded,
+  categoryId,
 }: {
   onAdded?: (bookId: string) => void
+  categoryId?: string | null
 }) {
   const { books, addBook, removeBook } = useDadok()
   const [open, setOpen] = useState(false)
@@ -97,6 +99,7 @@ export function AddBookDialog({
       thumbnail: picked.thumbnail,
       spineColor,
       fromMillie,
+      categoryIds: categoryId ? [categoryId] : [],
     })
     if (!added) {
       setMessage("이미 책장에 있는 책입니다.")
@@ -136,14 +139,16 @@ export function AddBookDialog({
       </DialogTrigger>
       <DialogContent
         showCloseButton={false}
-        className="sketch-frame overflow-visible rounded-[24px] bg-[var(--niche)] p-5 ring-0 sm:max-w-md"
+        className="max-w-[min(28rem,calc(100%-2rem))] overflow-visible border-0 bg-transparent p-4 shadow-none ring-0 sm:max-w-md"
       >
+        <div className="sketch-frame min-w-0 overflow-visible rounded-[24px] bg-[var(--niche)] p-5">
         <DialogTitle className="sr-only">
           {picked ? "책 꽂기" : "책 검색"}
         </DialogTitle>
+        <div className="min-w-0">
         {picked ? (
-          <div className="space-y-4">
-            <div className="flex items-center gap-2">
+          <div className="min-w-0 space-y-4">
+            <div className="flex min-w-0 items-center gap-2">
               <button
                 type="button"
                 className="flex size-10 shrink-0 items-center justify-center text-[var(--sketch-stroke)]"
@@ -168,7 +173,7 @@ export function AddBookDialog({
               </DialogClose>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex min-w-0 items-center gap-3">
               {picked.thumbnail ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
@@ -179,9 +184,11 @@ export function AddBookDialog({
               ) : (
                 <span className="h-20 w-14 shrink-0 rounded bg-[var(--wood)]" />
               )}
-              <div className="min-w-0">
-                <p className="truncate font-medium">{picked.title}</p>
-                <p className="truncate text-xs text-muted-foreground">
+              <div className="min-w-0 flex-1">
+                <p className="wrap-break-word font-medium leading-snug">
+                  {picked.title}
+                </p>
+                <p className="wrap-break-word text-xs text-muted-foreground">
                   {picked.authors}
                 </p>
                 <span
@@ -293,16 +300,16 @@ export function AddBookDialog({
             {message ? (
               <p className="text-sm text-muted-foreground">{message}</p>
             ) : null}
-            <ul className="no-scrollbar h-[19.5rem] overflow-y-auto">
+            <ul className="no-scrollbar h-[19.5rem] min-w-0 overflow-x-hidden overflow-y-auto">
               {results.map((item, index) => {
                 const already = books.some((book) => book.googleId === item.id)
                 return (
-                  <li key={item.id}>
+                  <li key={item.id} className="min-w-0">
                     {index > 0 ? <div className="sketch-line" /> : null}
-                    <div className="flex items-center gap-2 py-3">
+                    <div className="flex min-w-0 items-center gap-2 py-3">
                       <button
                         type="button"
-                        className="flex min-w-0 flex-1 items-center gap-2 text-left"
+                        className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden text-left"
                         disabled={already}
                         onClick={() => openPicker(item)}
                       >
@@ -353,6 +360,8 @@ export function AddBookDialog({
             </ul>
           </>
         )}
+        </div>
+        </div>
       </DialogContent>
     </Dialog>
   )

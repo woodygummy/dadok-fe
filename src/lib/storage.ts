@@ -1,4 +1,9 @@
-import { DEFAULT_PROFILE, type DadokState, type ThemeName } from "@/lib/types"
+import {
+  DEFAULT_PROFILE,
+  type BookCategory,
+  type DadokState,
+  type ThemeName,
+} from "@/lib/types"
 
 export const TOKEN_KEY = "dadok-fe:token"
 const LEGACY_KEY = "dadok-fe:v2"
@@ -6,6 +11,7 @@ const LEGACY_KEY = "dadok-fe:v2"
 export function emptyState(): DadokState {
   return {
     books: [],
+    categories: [],
     profile: { ...DEFAULT_PROFILE },
     session: null,
   }
@@ -40,6 +46,7 @@ export function loadState(userId: string): DadokState {
     const avatarUrl = parsed.profile?.avatarUrl
     return {
       books: Array.isArray(parsed.books) ? parsed.books : [],
+      categories: parseCategories(parsed.categories),
       profile: {
         nickname: parsed.profile?.nickname?.trim() || DEFAULT_PROFILE.nickname,
         email: parsed.profile?.email?.trim() || DEFAULT_PROFILE.email,
@@ -60,6 +67,7 @@ export function saveState(state: DadokState) {
     userKey(userId),
     JSON.stringify({
       books: state.books,
+      categories: state.categories,
       profile: state.profile,
     })
   )
@@ -67,6 +75,20 @@ export function saveState(state: DadokState) {
 
 export function createId(prefix: string) {
   return `${prefix}-${Math.random().toString(36).slice(2, 8)}-${Date.now().toString(36)}`
+}
+
+function parseCategories(value: unknown): BookCategory[] {
+  if (!Array.isArray(value)) return []
+  const categories: BookCategory[] = []
+  for (const item of value) {
+    if (!item || typeof item !== "object") continue
+    const row = item as { id?: unknown; name?: unknown }
+    const id = typeof row.id === "string" ? row.id.trim() : ""
+    const name = typeof row.name === "string" ? row.name.trim() : ""
+    if (!id || !name) continue
+    categories.push({ id, name })
+  }
+  return categories
 }
 
 function isTheme(value: unknown): value is ThemeName {

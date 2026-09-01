@@ -1,12 +1,14 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { createPortal } from "react-dom"
 import { Button } from "@/components/ui/button"
 import { fetchBookDetail, type BookDetail } from "@/lib/api"
 import { millieSearchUrl } from "@/lib/book-options"
 import { useDadok } from "@/lib/store"
 import type { Book } from "@/lib/types"
+import { Textarea } from "@/components/ui/textarea"
+import { cn } from "@/lib/utils"
 
 function formatAddedAt(value: string) {
   const date = new Date(value)
@@ -60,28 +62,17 @@ export function BookDetailDialog({
   open: boolean
   onOpenChange: (open: boolean) => void
 }) {
-  const { removeBook } = useDadok()
+  const { books, categories, removeBook, updateBook } = useDadok()
   const [mounted, setMounted] = useState(false)
   const [detail, setDetail] = useState<BookDetail | null>(null)
   const [loading, setLoading] = useState(false)
+  const [memo, setMemo] = useState("")
+  const memoRef = useRef("")
+  const liveRef = useRef<Book | null>(null)
 
   useEffect(() => {
     setMounted(true)
   }, [])
-
-  useEffect(() => {
-    if (!open) return
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onOpenChange(false)
-    }
-    window.addEventListener("keydown", onKey)
-    const previous = document.body.style.overflow
-    document.body.style.overflow = "hidden"
-    return () => {
-      window.removeEventListener("keydown", onKey)
-      document.body.style.overflow = previous
-    }
-  }, [open, onOpenChange])
 
   useEffect(() => {
     if (!open || !book) {
@@ -110,27 +101,68 @@ export function BookDetailDialog({
     }
   }, [book, open])
 
-  if (!mounted || !open || !book) return null
+  const live = book
+    ? (books.find((item) => item.id === book.id) ?? book)
+    : null
+  liveRef.current = live
+  memoRef.current = memo
 
-  const title = detail?.title || book.title
-  const authors = detail?.authors || book.authors
+  useEffect(() => {
+    if (!open) return
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return
+      const current = liveRef.current
+      if (current && memoRef.current !== (current.memo ?? "")) {
+        updateBook(current.id, { memo: memoRef.current })
+      }
+      onOpenChange(false)
+    }
+    window.addEventListener("keydown", onKey)
+    const previous = document.body.style.overflow
+    document.body.style.overflow = "hidden"
+    return () => {
+      window.removeEventListener("keydown", onKey)
+      document.body.style.overflow = previous
+    }
+  }, [open, onOpenChange, updateBook])
+
+  useEffect(() => {
+    setMemo(live?.memo ?? "")
+  }, [live?.id, live?.memo])
+
+  if (!mounted || !open || !live) return null
+
+  const title = detail?.title || live.title
+  const authors = detail?.authors || live.authors
   const credits = parseAuthorCredits(authors)
-  const thumbnail = detail?.thumbnail || book.thumbnail
-  const addedAt = formatAddedAt(book.addedAt)
+  const thumbnail = detail?.thumbnail || live.thumbnail
+  const addedAt = formatAddedAt(live.addedAt)
+  const selectedCategories = live.categoryIds ?? []
+
+  function persistMemo() {
+    if (memo !== (live.memo ?? "")) {
+      updateBook(live.id, { memo })
+    }
+  }
+
+  function close() {
+    persistMemo()
+    onOpenChange(false)
+  }
 
   return createPortal(
-    <div className="fixed inset-0 z-[80] flex items-center justify-center p-5">
+    <div className="fixed inset-0 z-[80] flex items-center justify-center p-5 pb-28">
       <button
         type="button"
         className="absolute inset-0 bg-[rgba(59,36,20,0.32)]"
         aria-label="닫기"
-        onClick={() => onOpenChange(false)}
+        onClick={close}
       />
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="book-detail-title"
-        className="relative z-10 grid max-h-[min(36rem,calc(100vh-4rem))] w-full max-w-md gap-4 overflow-y-auto rounded-[28px] border border-[rgba(92,74,58,0.18)] bg-[var(--card)] p-5 text-left text-sm text-[var(--card-foreground)] shadow-[0_18px_40px_rgba(59,36,20,0.18)]"
+        className="relative z-10 grid max-h-[min(36rem,calc(100vh-7rem))] w-full min-w-0 max-w-md gap-4 overflow-x-hidden overflow-y-auto rounded-[28px] border border-[rgba(92,74,58,0.18)] bg-[var(--card)] p-5 text-left text-sm text-[var(--card-foreground)] shadow-[0_18px_40px_rgba(59,36,20,0.18)]"
       >
         <Button
           type="button"
@@ -138,7 +170,7 @@ export function BookDetailDialog({
           size="icon-sm"
           className="absolute top-3 right-3 z-10 rounded-full"
           aria-label="닫기"
-          onClick={() => onOpenChange(false)}
+          onClick={close}
         >
           ✕
         </Button>
@@ -160,7 +192,7 @@ export function BookDetailDialog({
 
         <h2
           id="book-detail-title"
-          className="pr-8 font-serif text-[22px] leading-snug font-semibold tracking-tight"
+          className="min-w-0 pr-8 font-serif text-[22px] leading-snug font-semibold tracking-tight wrap-break-word"
         >
           {title}
         </h2>
@@ -188,7 +220,68 @@ export function BookDetailDialog({
           {addedAt ? <li>책장에 꽂은 날 {addedAt}</li> : null}
         </ul>
 
-        {book.fromMillie ? (
+        <div className="grid gap-3">
+          <button
+            type="button"
+            className={cn(
+              "h-10 rounded-full text-sm",
+              live.reading
+                ? "bg-[var(--wood)] text-[#FFF8F0]"
+                : "bg-[color-mix(in_srgb,var(--wood)_12%,transparent)]"
+            )}
+            onClick={() => updateBook(live.id, { reading: !live.reading })}
+          >
+            읽는중
+          </button>
+
+          <label className="grid gap-1.5">
+            <span className="text-sm font-medium">메모</span>
+            <Textarea
+              value={memo}
+              onChange={(event) => setMemo(event.target.value)}
+              onBlur={persistMemo}
+              placeholder="이 책에 남기고 싶은 말"
+              className="min-h-24 rounded-2xl bg-[color-mix(in_srgb,var(--wood)_8%,transparent)]"
+            />
+          </label>
+
+          <div className="grid gap-1.5">
+            <span className="text-sm font-medium">카테고리</span>
+            {categories.length === 0 ? (
+              <p className="text-xs text-muted-foreground">
+                책장 왼쪽 위 + 로 칸을 만들 수 있어요. 예: 추천 받은 책
+              </p>
+            ) : (
+              <div className="flex flex-wrap gap-1.5">
+                {categories.map((category) => {
+                  const on = selectedCategories.includes(category.id)
+                  return (
+                    <button
+                      key={category.id}
+                      type="button"
+                      className={cn(
+                        "rounded-full px-3 py-1.5 text-xs",
+                        on
+                          ? "bg-[var(--wood)] text-[#FFF8F0]"
+                          : "bg-[color-mix(in_srgb,var(--wood)_12%,transparent)]"
+                      )}
+                      onClick={() => {
+                        const next = on
+                          ? selectedCategories.filter((id) => id !== category.id)
+                          : [...selectedCategories, category.id]
+                        updateBook(live.id, { categoryIds: next })
+                      }}
+                    >
+                      {category.name}
+                    </button>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {live.fromMillie ? (
           <a
             href={millieSearchUrl(title)}
             target="_blank"
@@ -204,7 +297,8 @@ export function BookDetailDialog({
           variant="outline"
           className="h-12 rounded-3xl border-[rgba(166,61,31,0.35)] text-[var(--terracotta)]"
           onClick={() => {
-            removeBook(book.id)
+            removeBook(live.id)
+            onOpenChange(false)
             onOpenChange(false)
           }}
         >
