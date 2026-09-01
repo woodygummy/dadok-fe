@@ -24,6 +24,8 @@ export type Book = {
   authors: string
   thumbnail: string | null
   addedAt: string
+  spineColor?: string | null
+  fromMillie?: boolean
 }
 
 export type Profile = {

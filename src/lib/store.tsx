@@ -26,6 +26,8 @@ type AddBookInput = {
   title: string
   authors: string
   thumbnail: string | null
+  spineColor?: string | null
+  fromMillie?: boolean
 }
 
 type StoreValue = {
@@ -150,6 +152,8 @@ export function DadokProvider({ children }: { children: React.ReactNode }) {
       authors: input.authors.trim() || "저자 미상",
       thumbnail: input.thumbnail,
       addedAt: new Date().toISOString(),
+      spineColor: input.spineColor ?? null,
+      fromMillie: Boolean(input.fromMillie),
     }
     commit({
       ...snapshot,

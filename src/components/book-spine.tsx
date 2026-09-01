@@ -22,6 +22,7 @@ export function BookSpine({
   title,
   authors,
   thumbnail,
+  color,
   compact = false,
   highlight = false,
   showTitle = false,
@@ -31,16 +32,18 @@ export function BookSpine({
   title: string
   authors: string
   thumbnail: string | null
+  color?: string | null
   compact?: boolean
   highlight?: boolean
   showTitle?: boolean
   width: number
   onSelect?: () => void
 }) {
-  const backgroundColor = useCoverColor(
-    thumbnail,
+  const extractedColor = useCoverColor(
+    color ? null : thumbnail,
     `${title}:${thumbnail ?? "none"}`
   )
+  const backgroundColor = color || extractedColor
   const height = compact ? 48 : 73.6
   const fontSize = compact ? 8 : 10
   const maxChars = Math.max(1, Math.floor((height - 12) / (fontSize * 1.08)))

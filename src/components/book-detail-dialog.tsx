@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { createPortal } from "react-dom"
 import { Button } from "@/components/ui/button"
 import { fetchBookDetail, type BookDetail } from "@/lib/api"
+import { millieSearchUrl } from "@/lib/book-options"
 import { useDadok } from "@/lib/store"
 import type { Book } from "@/lib/types"
 
@@ -186,6 +187,17 @@ export function BookDetailDialog({
               : null}
           {addedAt ? <li>책장에 꽂은 날 {addedAt}</li> : null}
         </ul>
+
+        {book.fromMillie ? (
+          <a
+            href={millieSearchUrl(title)}
+            target="_blank"
+            rel="noreferrer"
+            className="flex h-12 items-center justify-center rounded-3xl bg-[var(--wood)] text-sm font-medium text-[#FFF8F0]"
+          >
+            밀리의 서재 바로가기
+          </a>
+        ) : null}
 
         <Button
           type="button"

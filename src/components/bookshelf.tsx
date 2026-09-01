@@ -94,6 +94,7 @@ export function Bookshelf({
                       title={book.title}
                       authors={book.authors}
                       thumbnail={book.thumbnail}
+                      color={book.spineColor}
                       compact={compact}
                       highlight={highlightId === book.id}
                       showTitle={showTitles}
