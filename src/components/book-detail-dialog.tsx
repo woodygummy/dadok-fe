@@ -14,6 +14,7 @@ import {
 } from "@/lib/types"
 import { Textarea } from "@/components/ui/textarea"
 import { cn } from "@/lib/utils"
+import { Star } from "lucide-react"
 
 function formatAddedAt(value: string) {
   const date = new Date(value)
@@ -72,8 +73,11 @@ export function BookDetailDialog({
   const [detail, setDetail] = useState<BookDetail | null>(null)
   const [loading, setLoading] = useState(false)
   const [memo, setMemo] = useState("")
+  const [review, setReview] = useState("")
   const [discardOpen, setDiscardOpen] = useState(false)
+  const [leaveReviewOpen, setLeaveReviewOpen] = useState(false)
   const memoRef = useRef("")
+  const reviewRef = useRef("")
   const liveRef = useRef<Book | null>(null)
 
   useEffect(() => {
@@ -112,6 +116,7 @@ export function BookDetailDialog({
     : null
   liveRef.current = live
   memoRef.current = memo
+  reviewRef.current = review
 
   function isDirty() {
     const current = liveRef.current
@@ -120,6 +125,10 @@ export function BookDetailDialog({
   }
 
   function requestClose() {
+    const current = liveRef.current
+    if (current && reviewRef.current !== (current.review ?? "")) {
+      updateBook(current.id, { review: reviewRef.current })
+    }
     if (isDirty()) {
       setDiscardOpen(true)
       return
@@ -138,6 +147,10 @@ export function BookDetailDialog({
     const onKey = (event: KeyboardEvent) => {
       if (event.key !== "Escape") return
       event.preventDefault()
+      if (leaveReviewOpen) {
+        setLeaveReviewOpen(false)
+        return
+      }
       if (discardOpen) {
         setDiscardOpen(false)
         return
@@ -151,17 +164,21 @@ export function BookDetailDialog({
       window.removeEventListener("keydown", onKey)
       document.body.style.overflow = previous
     }
-  }, [open, discardOpen, onOpenChange])
+  }, [open, discardOpen, leaveReviewOpen, onOpenChange])
 
   useEffect(() => {
     if (!open) {
       setMemo("")
+      setReview("")
       setDiscardOpen(false)
+      setLeaveReviewOpen(false)
       return
     }
     if (!live) return
     setMemo(live.memo ?? "")
+    setReview(live.review ?? "")
     setDiscardOpen(false)
+    setLeaveReviewOpen(false)
   }, [open, live?.id])
 
   if (!mounted || !open || !live) return null
@@ -172,15 +189,41 @@ export function BookDetailDialog({
   const thumbnail = detail?.thumbnail || live.thumbnail
   const addedAt = formatAddedAt(live.addedAt)
   const selectedCategories = live.categoryIds ?? []
-  const assignedCategories = categories.filter((category) =>
-    selectedCategories.includes(category.id)
-  )
   const status = readingStatusOf(live)
+  const rating = live.rating ?? 0
   const dirty = memo !== (live.memo ?? "")
+
+  function hasReviewData() {
+    const current = liveRef.current
+    const ratingValue = current?.rating ?? 0
+    return Boolean(reviewRef.current.trim() || ratingValue > 0)
+  }
+
+  function persistReview() {
+    if (review !== (live.review ?? "")) {
+      updateBook(live.id, { review })
+    }
+  }
 
   function cycleStatus() {
     const next = nextReadingStatus(status)
+    if (status === "done" && next !== "done" && hasReviewData()) {
+      persistReview()
+      setLeaveReviewOpen(true)
+      return
+    }
     updateBook(live.id, { readingStatus: next })
+  }
+
+  function confirmLeaveReview() {
+    const next = nextReadingStatus("done")
+    updateBook(live.id, {
+      readingStatus: next,
+      review: "",
+      rating: null,
+    })
+    setReview("")
+    setLeaveReviewOpen(false)
   }
 
   function saveMemo() {
@@ -278,16 +321,13 @@ export function BookDetailDialog({
         <div className="grid gap-3">
           <div className="grid gap-1.5">
             <span className="text-base font-medium">카테고리</span>
-            {assignedCategories.length === 0 ? (
-              <p className="text-sm text-muted-foreground">없음</p>
-            ) : (
-              <p className="text-sm wrap-break-word">
-                {assignedCategories.map((category) => category.name).join(", ")}
-              </p>
-            )}
-            {categories.length > 0 ? (
-              <div className="flex flex-wrap gap-1.5">
-                {categories.map((category) => {
+            <div className="flex flex-wrap gap-1.5">
+              {categories.length === 0 ? (
+                <span className="rounded-full bg-[color-mix(in_srgb,var(--wood)_12%,transparent)] px-3 py-1.5 text-xs text-muted-foreground">
+                  없음
+                </span>
+              ) : (
+                categories.map((category) => {
                   const on = selectedCategories.includes(category.id)
                   return (
                     <button
@@ -309,10 +349,49 @@ export function BookDetailDialog({
                       {category.name}
                     </button>
                   )
+                })
+              )}
+            </div>
+          </div>
+
+          {status === "done" ? (
+            <div className="grid gap-1.5">
+              <span className="text-base font-medium">감상평</span>
+              <div className="flex items-center gap-1">
+                {[1, 2, 3, 4, 5].map((value) => {
+                  const on = value <= rating
+                  return (
+                    <button
+                      key={value}
+                      type="button"
+                      aria-label={`${value}점`}
+                      aria-pressed={on}
+                      className="p-0.5"
+                      onClick={() =>
+                        updateBook(live.id, {
+                          rating: rating === value ? null : value,
+                        })
+                      }
+                    >
+                      <Star
+                        className="size-6"
+                        strokeWidth={1.6}
+                        fill={on ? "var(--terracotta)" : "transparent"}
+                        color="var(--terracotta)"
+                      />
+                    </button>
+                  )
                 })}
               </div>
-            ) : null}
-          </div>
+              <Textarea
+                value={review}
+                onChange={(event) => setReview(event.target.value)}
+                onBlur={persistReview}
+                placeholder="이 책을 읽고 남기고 싶은 감상"
+                className="no-scrollbar min-h-24 resize-none rounded-[8px] bg-[color-mix(in_srgb,var(--wood)_8%,transparent)]"
+              />
+            </div>
+          ) : null}
 
           <div className="grid gap-1.5">
             <span className="text-base font-medium">메모</span>
@@ -358,6 +437,46 @@ export function BookDetailDialog({
           책장에서 빼기
         </button>
       </div>
+      {leaveReviewOpen ? (
+        <div className="absolute inset-0 z-20 flex items-center justify-center p-6">
+          <button
+            type="button"
+            className="absolute inset-0 bg-[rgba(59,36,20,0.28)]"
+            aria-label="취소"
+            onClick={() => setLeaveReviewOpen(false)}
+          />
+          <div
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="leave-review-title"
+            className="relative z-10 w-full max-w-xs rounded-[24px] bg-[var(--card)] p-5 text-[var(--card-foreground)] shadow-[0_18px_40px_rgba(59,36,20,0.22)]"
+          >
+            <p id="leave-review-title" className="font-medium">
+              감상평을 지울까요?
+            </p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              완독이 아니면 별점과 감상평이 삭제됩니다.
+            </p>
+            <div className="mt-4 grid grid-cols-2 gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                className="h-11 rounded-2xl"
+                onClick={() => setLeaveReviewOpen(false)}
+              >
+                취소
+              </Button>
+              <Button
+                type="button"
+                className="h-11 rounded-2xl"
+                onClick={confirmLeaveReview}
+              >
+                지우기
+              </Button>
+            </div>
+          </div>
+        </div>
+      ) : null}
       {discardOpen ? (
         <div className="absolute inset-0 z-20 flex items-center justify-center p-6">
           <button

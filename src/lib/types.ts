@@ -29,7 +29,7 @@ export type ReadingStatus = (typeof READING_STATUSES)[number]
 export const READING_STATUS_LABEL: Record<ReadingStatus, string> = {
   unread: "읽기전",
   reading: "읽는중",
-  done: "완돈",
+  done: "완독",
 }
 
 export function isReadingStatus(value: unknown): value is ReadingStatus {
@@ -61,6 +61,8 @@ export type Book = {
   reading?: boolean
   readingStatus?: ReadingStatus
   memo?: string
+  review?: string
+  rating?: number | null
   categoryIds?: string[]
 }
 

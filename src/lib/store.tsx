@@ -48,7 +48,7 @@ type StoreValue = {
   addBook: (input: AddBookInput) => Book | null
   updateBook: (
     id: string,
-    patch: Partial<Pick<Book, "reading" | "readingStatus" | "memo" | "categoryIds">>
+    patch: Partial<Pick<Book, "reading" | "readingStatus" | "memo" | "review" | "rating" | "categoryIds">>
   ) => void
   removeBook: (id: string) => void
   addCategory: (name: string) => BookCategory | null
@@ -166,6 +166,8 @@ export function DadokProvider({ children }: { children: React.ReactNode }) {
       reading: false,
       readingStatus: "unread" as ReadingStatus,
       memo: "",
+      review: "",
+      rating: null,
       categoryIds: input.categoryIds ?? [],
     }
     commit({
@@ -178,7 +180,7 @@ export function DadokProvider({ children }: { children: React.ReactNode }) {
   const updateBook = useCallback(
     (
       id: string,
-      patch: Partial<Pick<Book, "reading" | "readingStatus" | "memo" | "categoryIds">>
+      patch: Partial<Pick<Book, "reading" | "readingStatus" | "memo" | "review" | "rating" | "categoryIds">>
     ) => {
       commit({
         ...snapshot,
@@ -188,6 +190,8 @@ export function DadokProvider({ children }: { children: React.ReactNode }) {
             ...book,
             ...patch,
             memo: patch.memo != null ? patch.memo : book.memo,
+            review: patch.review != null ? patch.review : book.review,
+            rating: patch.rating !== undefined ? patch.rating : book.rating,
             categoryIds: patch.categoryIds ?? book.categoryIds,
           }
           const readingStatus = readingStatusOf(next)
