@@ -57,68 +57,7 @@ export default function ShelfPage() {
 
   return (
     <div className="space-y-5">
-      <header className="flex items-center gap-2">
-        <Button
-          size="icon"
-          variant="ghost"
-          className="size-10 shrink-0 rounded-full"
-          aria-label="카테고리 칸 만들기"
-          disabled={categories.length >= CATEGORY_LIMIT}
-          onClick={() => {
-            setCategoryError("")
-            setCategoryName("")
-            setCategoryOpen(true)
-          }}
-        >
-          <Plus className="size-6" />
-        </Button>
-        <div className="no-scrollbar flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto">
-          <button
-            type="button"
-            className={cn(
-              "h-8 shrink-0 rounded-full px-3 text-xs",
-              !activeCategoryId
-                ? "bg-[var(--wood)] text-[#FFF8F0]"
-                : "bg-[color-mix(in_srgb,var(--wood)_12%,transparent)]"
-            )}
-            onClick={() => setActiveCategoryId(null)}
-          >
-            전체
-          </button>
-          {categories.map((category) => {
-            const selected = activeCategoryId === category.id
-            return (
-              <span key={category.id} className="flex shrink-0 items-center">
-                <button
-                  type="button"
-                  className={cn(
-                    "h-8 rounded-full px-3 text-xs",
-                    selected
-                      ? "bg-[var(--wood)] text-[#FFF8F0]"
-                      : "bg-[color-mix(in_srgb,var(--wood)_12%,transparent)]",
-                    selected ? "rounded-r-none pr-2" : null
-                  )}
-                  onClick={() => setActiveCategoryId(category.id)}
-                >
-                  {category.name}
-                </button>
-                {selected ? (
-                  <button
-                    type="button"
-                    className="flex h-8 w-7 items-center justify-center rounded-r-full bg-[var(--wood)] text-[#FFF8F0]"
-                    aria-label={`${category.name} 칸 지우기`}
-                    onClick={() => {
-                      removeCategory(category.id)
-                      setActiveCategoryId(null)
-                    }}
-                  >
-                    <X className="size-3.5" />
-                  </button>
-                ) : null}
-              </span>
-            )
-          })}
-        </div>
+      <header className="flex justify-end">
         <AddBookDialog
           categoryId={activeCategoryId}
           onAdded={(id) => {
@@ -128,11 +67,73 @@ export default function ShelfPage() {
         />
       </header>
       <div>
-        <div className="mb-1 flex justify-end">
+        <div className="mb-1 flex items-center gap-2">
+          <Button
+            size="icon"
+            variant="ghost"
+            className="size-8 shrink-0 rounded-full"
+            aria-label="카테고리 칸 만들기"
+            disabled={categories.length >= CATEGORY_LIMIT}
+            onClick={() => {
+              setCategoryError("")
+              setCategoryName("")
+              setCategoryOpen(true)
+            }}
+          >
+            <Plus className="size-5" />
+          </Button>
+          <div className="no-scrollbar flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto">
+            <button
+              type="button"
+              className={cn(
+                "h-8 shrink-0 rounded-full px-3 text-xs",
+                !activeCategoryId
+                  ? "bg-[var(--wood)] text-[#FFF8F0]"
+                  : "bg-[color-mix(in_srgb,var(--wood)_12%,transparent)]"
+              )}
+              onClick={() => setActiveCategoryId(null)}
+            >
+              전체
+            </button>
+            {categories.map((category) => {
+              const selected = activeCategoryId === category.id
+              return (
+                <span key={category.id} className="flex shrink-0 items-center">
+                  <button
+                    type="button"
+                    className={cn(
+                      "h-8 rounded-full px-3 text-xs",
+                      selected
+                        ? "bg-[var(--wood)] text-[#FFF8F0]"
+                        : "bg-[color-mix(in_srgb,var(--wood)_12%,transparent)]",
+                      selected ? "rounded-r-none pr-2" : null
+                    )}
+                    onClick={() => setActiveCategoryId(category.id)}
+                  >
+                    {category.name}
+                  </button>
+                  {selected ? (
+                    <button
+                      type="button"
+                      className="flex h-8 w-7 items-center justify-center rounded-r-full bg-[var(--wood)] text-[#FFF8F0]"
+                      aria-label={`${category.name} 칸 지우기`}
+                      onClick={() => {
+                        removeCategory(category.id)
+                        setActiveCategoryId(null)
+                      }}
+                    >
+                      <X className="size-3.5" />
+                    </button>
+                  ) : null}
+                </span>
+              )
+            })}
+          </div>
           <Button
             type="button"
             size="sm"
             variant={showTitles ? "default" : "outline"}
+            className="shrink-0"
             onClick={() => setShowTitles((value) => !value)}
           >
             책제목
