@@ -129,15 +129,35 @@ export default function ShelfPage() {
               )
             })}
           </div>
-          <Button
+          <button
             type="button"
-            size="sm"
-            variant={showTitles ? "default" : "outline"}
-            className="shrink-0"
+            className="relative shrink-0 bg-transparent p-0 text-sm font-medium text-[var(--title-mark)]"
+            aria-pressed={showTitles}
+            aria-label={showTitles ? "책제목 숨기기" : "책제목 보기"}
             onClick={() => setShowTitles((value) => !value)}
           >
-            책제목
-          </Button>
+            <span className="relative inline-block px-0.5">
+              책제목
+              {showTitles ? null : (
+                <svg
+                  aria-hidden
+                  className="pointer-events-none absolute inset-0 h-full w-full overflow-visible"
+                  viewBox="0 0 100 24"
+                  preserveAspectRatio="none"
+                >
+                  <line
+                    x1="8"
+                    y1="20"
+                    x2="92"
+                    y2="4"
+                    stroke="currentColor"
+                    strokeWidth="2.4"
+                    strokeLinecap="round"
+                  />
+                </svg>
+              )}
+            </span>
+          </button>
         </div>
         <Bookshelf
           books={visibleBooks}

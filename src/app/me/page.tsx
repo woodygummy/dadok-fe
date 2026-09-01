@@ -6,16 +6,11 @@ import { useDadok } from "@/lib/store"
 import { THEME_LABEL } from "@/lib/types"
 
 export default function MePage() {
-  const { profile, session } = useDadok()
-  const isAdmin = Boolean(session?.user.isAdmin)
+  const { profile } = useDadok()
 
   const menu = [
     { href: "/me/account", label: "내 계정" },
     { href: "/me/notifications", label: "알림 설정" },
-    {
-      href: isAdmin ? "/me/inquiries" : "/me/inquiry",
-      label: isAdmin ? "문의 사항" : "문의하기",
-    },
   ]
 
   return (

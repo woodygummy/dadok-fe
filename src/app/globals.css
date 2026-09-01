@@ -67,6 +67,7 @@
   --terracotta: #c45c26;
   --muted-ink: #5c4a3a;
   --sketch-stroke: #4b4a46;
+  --title-mark: #467d56;
 }
 
 [data-theme="wood"] {
@@ -97,6 +98,7 @@
   --terracotta: #c45c26;
   --muted-ink: #5c4a3a;
   --sketch-stroke: #4b4a46;
+  --title-mark: #2f5d42;
 }
 
 [data-theme="dark"] {
@@ -127,6 +129,7 @@
   --terracotta: #c4785a;
   --muted-ink: #c5b8a8;
   --sketch-stroke: #e8ddd0;
+  --title-mark: #8fbc9a;
 }
 
 @keyframes shelf-in {
