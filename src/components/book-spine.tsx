@@ -18,6 +18,13 @@ function truncateSpineTitle(title: string, maxChars: number) {
   return `${cleaned.slice(0, Math.max(1, maxChars - 1))}…`
 }
 
+function spineAuthor(authors: string) {
+  const cleaned = authors.trim()
+  if (!cleaned || cleaned === "저자 미상") return ""
+  const first = cleaned.split(",")[0]?.trim() ?? ""
+  return first.replace(/\s*\([^)]*\)\s*$/, "").trim()
+}
+
 export function BookSpine({
   title,
   authors,
@@ -25,7 +32,6 @@ export function BookSpine({
   color,
   compact = false,
   highlight = false,
-  showTitle = false,
   width,
   onSelect,
 }: {
@@ -35,7 +41,6 @@ export function BookSpine({
   color?: string | null
   compact?: boolean
   highlight?: boolean
-  showTitle?: boolean
   width: number
   onSelect?: () => void
 }) {
@@ -44,9 +49,15 @@ export function BookSpine({
     `${title}:${thumbnail ?? "none"}`
   )
   const backgroundColor = color || extractedColor
-  const height = compact ? 48 : 73.6
+  const height = compact ? 64 * 1.7 - 16 : 96 * 1.7 - 16
   const fontSize = compact ? 8 : 10
-  const maxChars = Math.max(1, Math.floor((height - 12) / (fontSize * 1.08)))
+  const authorName = spineAuthor(authors)
+  const authorSize = compact ? 6 : 7
+  const authorReserve = authorName ? authorSize + 6 : 0
+  const maxChars = Math.max(
+    1,
+    Math.floor((height - 12 - authorReserve) / (fontSize * 1.08))
+  )
   const frameClass = cn(
     "relative shrink-0",
     highlight && "animate-shelf-in",
@@ -75,29 +86,38 @@ export function BookSpine({
             "inset -6px 0 10px rgba(44, 28, 20, 0.28), 3px 4px 8px rgba(59, 36, 20, 0.18)",
         }}
       >
-        {showTitle ? null : (
+        <span
+          className="pointer-events-none absolute inset-x-0 top-0 flex justify-center overflow-hidden pt-1.5 font-medium"
+          style={{ bottom: authorReserve }}
+        >
           <span
-            className="pointer-events-none absolute inset-y-1 left-1/2 w-px -translate-x-1/2 opacity-25"
-            style={{ backgroundColor: "rgba(255,248,240,0.4)" }}
-          />
-        )}
-        {showTitle ? (
-          <span className="pointer-events-none absolute inset-0 flex justify-center overflow-hidden pt-1.5 pb-1.5 font-medium">
-            <span
-              className="max-h-full overflow-hidden"
-              style={{
-                writingMode: "vertical-rl",
-                textOrientation: "upright",
-                fontSize,
-                lineHeight: 1,
-                letterSpacing: "0.06em",
-                whiteSpace: "nowrap",
-                textOverflow: "ellipsis",
-                color: isLightColor(backgroundColor) ? "#3B2414" : "#FFF8F0",
-              }}
-            >
-              {truncateSpineTitle(title, maxChars)}
-            </span>
+            className="max-h-full overflow-hidden"
+            style={{
+              writingMode: "vertical-rl",
+              textOrientation: "upright",
+              fontSize,
+              lineHeight: 1,
+              letterSpacing: "0.06em",
+              whiteSpace: "nowrap",
+              textOverflow: "ellipsis",
+              color: isLightColor(backgroundColor) ? "#3B2414" : "#FFF8F0",
+            }}
+          >
+            {truncateSpineTitle(title, maxChars)}
+          </span>
+        </span>
+        {authorName ? (
+          <span
+            className="pointer-events-none absolute inset-x-0 bottom-0 overflow-hidden px-px pb-0.5 text-center font-medium"
+            style={{
+              fontSize: authorSize,
+              lineHeight: 1.1,
+              whiteSpace: "nowrap",
+              textOverflow: "ellipsis",
+              color: isLightColor(backgroundColor) ? "#3B2414" : "#FFF8F0",
+            }}
+          >
+            {authorName}
           </span>
         ) : null}
       </div>

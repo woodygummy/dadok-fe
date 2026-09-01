@@ -24,7 +24,6 @@ import { Plus, X } from "lucide-react"
 export default function ShelfPage() {
   const { books, categories, addCategory, removeCategory } = useDadok()
   const [highlightId, setHighlightId] = useState<string | null>(null)
-  const [showTitles, setShowTitles] = useState(false)
   const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null)
   const [categoryOpen, setCategoryOpen] = useState(false)
   const [categoryName, setCategoryName] = useState("")
@@ -57,15 +56,6 @@ export default function ShelfPage() {
 
   return (
     <div className="space-y-5">
-      <header className="flex justify-end">
-        <AddBookDialog
-          categoryId={activeCategoryId}
-          onAdded={(id) => {
-            setHighlightId(id)
-            window.setTimeout(() => setHighlightId(null), 900)
-          }}
-        />
-      </header>
       <div>
         <div className="mb-1 flex items-center gap-2">
           <Button
@@ -129,40 +119,17 @@ export default function ShelfPage() {
               )
             })}
           </div>
-          <button
-            type="button"
-            className="relative shrink-0 bg-transparent p-0 text-sm font-medium text-[var(--title-mark)]"
-            aria-pressed={showTitles}
-            aria-label={showTitles ? "책제목 숨기기" : "책제목 보기"}
-            onClick={() => setShowTitles((value) => !value)}
-          >
-            <span className="relative inline-block px-0.5">
-              책제목
-              {showTitles ? null : (
-                <svg
-                  aria-hidden
-                  className="pointer-events-none absolute inset-0 h-full w-full overflow-visible"
-                  viewBox="0 0 100 24"
-                  preserveAspectRatio="none"
-                >
-                  <line
-                    x1="8"
-                    y1="20"
-                    x2="92"
-                    y2="4"
-                    stroke="currentColor"
-                    strokeWidth="2.4"
-                    strokeLinecap="round"
-                  />
-                </svg>
-              )}
-            </span>
-          </button>
+          <AddBookDialog
+            categoryId={activeCategoryId}
+            onAdded={(id) => {
+              setHighlightId(id)
+              window.setTimeout(() => setHighlightId(null), 900)
+            }}
+          />
         </div>
         <Bookshelf
           books={visibleBooks}
           highlightId={highlightId}
-          showTitles={showTitles}
         />
         <p className="mt-1 text-right text-sm tabular-nums text-muted-foreground">
           {activeCategoryId

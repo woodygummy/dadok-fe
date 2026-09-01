@@ -18,7 +18,7 @@ import {
 } from "@/lib/book-options"
 import { useDadok } from "@/lib/store"
 import { BOOK_LIMIT } from "@/lib/types"
-import { ChevronLeft, Plus, Shuffle, X } from "lucide-react"
+import { ChevronLeft, Shuffle, X } from "lucide-react"
 
 export function AddBookDialog({
   onAdded,
@@ -141,15 +141,13 @@ export function AddBookDialog({
     >
       <DialogTrigger
         render={
-          <Button
-            size="icon"
-            variant="ghost"
-            className="size-10 rounded-full"
-            aria-label="책 추가"
+          <button
+            type="button"
+            className="shrink-0 bg-transparent p-0 text-sm font-medium"
           />
         }
       >
-        <Plus className="size-6" />
+        책 추가
       </DialogTrigger>
       <DialogContent
         showCloseButton={false}

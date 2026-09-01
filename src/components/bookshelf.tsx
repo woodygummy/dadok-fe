@@ -13,13 +13,11 @@ const MIN_GAP = 4
 export function Bookshelf({
   compact = false,
   highlightId,
-  showTitles = false,
   books: booksOverride,
   onSelectBook,
 }: {
   compact?: boolean
   highlightId?: string | null
-  showTitles?: boolean
   books?: Book[]
   onSelectBook?: (book: Book) => void
 }) {
@@ -71,21 +69,21 @@ export function Bookshelf({
             <div key={rowIndex} className="mb-1 last:mb-0">
               <div
                 ref={rowIndex === 0 ? rowRef : undefined}
-                className={cn(
+                  className={cn(
                   "rounded-md bg-[var(--niche)] px-0",
-                  compact ? "h-16" : "h-24",
                   filled
                     ? "grid items-end"
                     : "flex items-end gap-1"
                 )}
-                style={
-                  filled
+                style={{
+                  height: compact ? 64 * 1.7 : 96 * 1.7,
+                  ...(filled
                     ? {
                         gridTemplateColumns: `repeat(${booksPerRow}, ${bookWidth}px)`,
                         justifyContent: "space-between",
                       }
-                    : undefined
-                }
+                    : {}),
+                }}
               >
                 {rowBooks.length === 0 ? (
                   <p className="w-full pb-2 text-center text-[11px] text-[var(--muted-ink)]/50">
@@ -101,7 +99,6 @@ export function Bookshelf({
                       color={book.spineColor}
                       compact={compact}
                       highlight={highlightId === book.id}
-                      showTitle={showTitles}
                       width={bookWidth}
                       onSelect={
                         compact
