@@ -200,7 +200,7 @@ export function BookDetailDialog({
         role="dialog"
         aria-modal="true"
         aria-labelledby="book-detail-title"
-        className="relative z-10 grid max-h-[min(36rem,calc(100vh-7rem))] w-full min-w-0 max-w-md gap-4 overflow-x-hidden overflow-y-auto rounded-[28px] border border-[rgba(92,74,58,0.18)] bg-[var(--card)] p-5 text-left text-sm text-[var(--card-foreground)] shadow-[0_18px_40px_rgba(59,36,20,0.18)]"
+        className="no-scrollbar relative z-10 grid max-h-[min(36rem,calc(100vh-7rem))] w-full min-w-0 max-w-md gap-4 overflow-x-hidden overflow-y-auto rounded-[28px] border border-[rgba(92,74,58,0.18)] bg-[var(--card)] p-5 text-left text-sm text-[var(--card-foreground)] shadow-[0_18px_40px_rgba(59,36,20,0.18)]"
       >
         <Button
           type="button"
@@ -220,10 +220,10 @@ export function BookDetailDialog({
               <img
                 src={thumbnail}
                 alt=""
-                className="h-full w-full rounded-xl object-cover shadow-[0_10px_24px_rgba(59,36,20,0.16)]"
+                className="h-full w-full rounded-[6px] object-cover shadow-[0_10px_24px_rgba(59,36,20,0.16)]"
               />
             ) : (
-              <span className="flex h-full w-full items-end rounded-xl bg-[var(--wood)] px-2 pb-2 text-[11px] leading-tight text-[#FFF8F0]">
+              <span className="flex h-full w-full items-end rounded-[6px] bg-[var(--wood)] px-2 pb-2 text-[11px] leading-tight text-[#FFF8F0]">
                 {title}
               </span>
             )}
@@ -277,7 +277,7 @@ export function BookDetailDialog({
 
         <div className="grid gap-3">
           <div className="grid gap-1.5">
-            <span className="text-sm font-medium">카테고리</span>
+            <span className="text-base font-medium">카테고리</span>
             {assignedCategories.length === 0 ? (
               <p className="text-sm text-muted-foreground">없음</p>
             ) : (
@@ -315,12 +315,12 @@ export function BookDetailDialog({
           </div>
 
           <div className="grid gap-1.5">
-            <span className="text-sm font-medium">메모</span>
+            <span className="text-base font-medium">메모</span>
             <Textarea
               value={memo}
               onChange={(event) => setMemo(event.target.value)}
               placeholder="이 책에 남기고 싶은 말"
-              className="min-h-24 rounded-2xl bg-[color-mix(in_srgb,var(--wood)_8%,transparent)]"
+              className="no-scrollbar min-h-24 resize-none rounded-[8px] bg-[color-mix(in_srgb,var(--wood)_8%,transparent)]"
             />
             <div className="flex justify-end">
               <Button
@@ -347,17 +347,16 @@ export function BookDetailDialog({
           </a>
         ) : null}
 
-        <Button
+        <button
           type="button"
-          variant="outline"
-          className="h-12 rounded-3xl border-[rgba(166,61,31,0.35)] text-[var(--terracotta)]"
+          className="py-1 text-center text-base font-medium text-[var(--terracotta)]"
           onClick={() => {
             removeBook(live.id)
             onOpenChange(false)
           }}
         >
           책장에서 빼기
-        </Button>
+        </button>
       </div>
       {discardOpen ? (
         <div className="absolute inset-0 z-20 flex items-center justify-center p-6">
