@@ -19,7 +19,7 @@ import {
   saveState,
   saveToken,
 } from "@/lib/storage"
-import { BOOK_LIMIT, CATEGORY_LIMIT, CATEGORY_NAME_MAX, type Book, type BookCategory, type DadokState, type ThemeName } from "@/lib/types"
+import { BOOK_LIMIT, CATEGORY_LIMIT, CATEGORY_NAME_MAX, readingStatusOf, type Book, type BookCategory, type DadokState, type ReadingStatus, type ThemeName } from "@/lib/types"
 
 type AddBookInput = {
   googleId: string
@@ -48,7 +48,7 @@ type StoreValue = {
   addBook: (input: AddBookInput) => Book | null
   updateBook: (
     id: string,
-    patch: Partial<Pick<Book, "reading" | "memo" | "categoryIds">>
+    patch: Partial<Pick<Book, "reading" | "readingStatus" | "memo" | "categoryIds">>
   ) => void
   removeBook: (id: string) => void
   addCategory: (name: string) => BookCategory | null
@@ -164,6 +164,7 @@ export function DadokProvider({ children }: { children: React.ReactNode }) {
       spineColor: input.spineColor ?? null,
       fromMillie: Boolean(input.fromMillie),
       reading: false,
+      readingStatus: "unread" as ReadingStatus,
       memo: "",
       categoryIds: input.categoryIds ?? [],
     }
@@ -177,17 +178,23 @@ export function DadokProvider({ children }: { children: React.ReactNode }) {
   const updateBook = useCallback(
     (
       id: string,
-      patch: Partial<Pick<Book, "reading" | "memo" | "categoryIds">>
+      patch: Partial<Pick<Book, "reading" | "readingStatus" | "memo" | "categoryIds">>
     ) => {
       commit({
         ...snapshot,
         books: snapshot.books.map((book) => {
           if (book.id !== id) return book
-          return {
+          const next = {
             ...book,
             ...patch,
             memo: patch.memo != null ? patch.memo : book.memo,
             categoryIds: patch.categoryIds ?? book.categoryIds,
+          }
+          const readingStatus = readingStatusOf(next)
+          return {
+            ...next,
+            readingStatus,
+            reading: readingStatus === "reading",
           }
         }),
       })

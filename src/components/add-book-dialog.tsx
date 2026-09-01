@@ -86,19 +86,21 @@ export function AddBookDialog({
     setFromMillie(false)
   }
 
-  function handleAdd() {
-    if (!picked) return
+  function addSearchBook(
+    item: SearchBook,
+    options: { spineColor: string; fromMillie: boolean },
+  ) {
     if (books.length >= BOOK_LIMIT) {
       setMessage(`책장은 ${BOOK_LIMIT}권까지만 꽂을 수 있습니다.`)
       return
     }
     const added = addBook({
-      googleId: picked.id,
-      title: picked.title,
-      authors: picked.authors,
-      thumbnail: picked.thumbnail,
-      spineColor,
-      fromMillie,
+      googleId: item.id,
+      title: item.title,
+      authors: item.authors,
+      thumbnail: item.thumbnail,
+      spineColor: options.spineColor,
+      fromMillie: options.fromMillie,
       categoryIds: categoryId ? [categoryId] : [],
     })
     if (!added) {
@@ -108,6 +110,18 @@ export function AddBookDialog({
     }
     setOpen(false)
     onAdded?.(added.id)
+  }
+
+  function handleQuickAdd(item: SearchBook) {
+    addSearchBook(item, {
+      spineColor: pickRandomSpineColor(),
+      fromMillie: false,
+    })
+  }
+
+  function handleAdd() {
+    if (!picked) return
+    addSearchBook(picked, { spineColor, fromMillie })
   }
 
   function handleRemove(item: SearchBook) {
@@ -348,7 +362,10 @@ export function AddBookDialog({
                           size="sm"
                           className="shrink-0"
                           disabled={books.length >= BOOK_LIMIT}
-                          onClick={() => openPicker(item)}
+                          onClick={(event) => {
+                            event.stopPropagation()
+                            handleQuickAdd(item)
+                          }}
                         >
                           추가
                         </Button>

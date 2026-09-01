@@ -22,6 +22,33 @@ export type BookCategory = {
   name: string
 }
 
+export const READING_STATUSES = ["unread", "reading", "done"] as const
+
+export type ReadingStatus = (typeof READING_STATUSES)[number]
+
+export const READING_STATUS_LABEL: Record<ReadingStatus, string> = {
+  unread: "읽기전",
+  reading: "읽는중",
+  done: "완돈",
+}
+
+export function isReadingStatus(value: unknown): value is ReadingStatus {
+  return value === "unread" || value === "reading" || value === "done"
+}
+
+export function readingStatusOf(book: {
+  readingStatus?: unknown
+  reading?: unknown
+}): ReadingStatus {
+  if (isReadingStatus(book.readingStatus)) return book.readingStatus
+  return book.reading === true ? "reading" : "unread"
+}
+
+export function nextReadingStatus(current: ReadingStatus): ReadingStatus {
+  const index = READING_STATUSES.indexOf(current)
+  return READING_STATUSES[(index + 1) % READING_STATUSES.length]
+}
+
 export type Book = {
   id: string
   googleId: string
@@ -32,6 +59,7 @@ export type Book = {
   spineColor?: string | null
   fromMillie?: boolean
   reading?: boolean
+  readingStatus?: ReadingStatus
   memo?: string
   categoryIds?: string[]
 }

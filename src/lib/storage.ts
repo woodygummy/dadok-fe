@@ -1,5 +1,7 @@
 import {
   DEFAULT_PROFILE,
+  readingStatusOf,
+  type Book,
   type BookCategory,
   type DadokState,
   type ThemeName,
@@ -45,7 +47,7 @@ export function loadState(userId: string): DadokState {
     const theme = parsed.profile?.theme
     const avatarUrl = parsed.profile?.avatarUrl
     return {
-      books: Array.isArray(parsed.books) ? parsed.books : [],
+      books: parseBooks(parsed.books),
       categories: parseCategories(parsed.categories),
       profile: {
         nickname: parsed.profile?.nickname?.trim() || DEFAULT_PROFILE.nickname,
@@ -75,6 +77,23 @@ export function saveState(state: DadokState) {
 
 export function createId(prefix: string) {
   return `${prefix}-${Math.random().toString(36).slice(2, 8)}-${Date.now().toString(36)}`
+}
+
+function parseBooks(value: unknown): Book[] {
+  if (!Array.isArray(value)) return []
+  const books: Book[] = []
+  for (const item of value) {
+    if (!item || typeof item !== "object") continue
+    const row = item as Book
+    if (typeof row.id !== "string" || typeof row.googleId !== "string") continue
+    const readingStatus = readingStatusOf(row)
+    books.push({
+      ...row,
+      readingStatus,
+      reading: readingStatus === "reading",
+    })
+  }
+  return books
 }
 
 function parseCategories(value: unknown): BookCategory[] {

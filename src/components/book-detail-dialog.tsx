@@ -6,7 +6,12 @@ import { Button } from "@/components/ui/button"
 import { fetchBookDetail, type BookDetail } from "@/lib/api"
 import { millieSearchUrl } from "@/lib/book-options"
 import { useDadok } from "@/lib/store"
-import type { Book } from "@/lib/types"
+import {
+  nextReadingStatus,
+  READING_STATUS_LABEL,
+  readingStatusOf,
+  type Book,
+} from "@/lib/types"
 import { Textarea } from "@/components/ui/textarea"
 import { cn } from "@/lib/utils"
 
@@ -67,6 +72,7 @@ export function BookDetailDialog({
   const [detail, setDetail] = useState<BookDetail | null>(null)
   const [loading, setLoading] = useState(false)
   const [memo, setMemo] = useState("")
+  const [discardOpen, setDiscardOpen] = useState(false)
   const memoRef = useRef("")
   const liveRef = useRef<Book | null>(null)
 
@@ -107,15 +113,36 @@ export function BookDetailDialog({
   liveRef.current = live
   memoRef.current = memo
 
+  function isDirty() {
+    const current = liveRef.current
+    if (!current) return false
+    return memoRef.current !== (current.memo ?? "")
+  }
+
+  function requestClose() {
+    if (isDirty()) {
+      setDiscardOpen(true)
+      return
+    }
+    setDiscardOpen(false)
+    onOpenChange(false)
+  }
+
+  function discardAndClose() {
+    setDiscardOpen(false)
+    onOpenChange(false)
+  }
+
   useEffect(() => {
     if (!open) return
     const onKey = (event: KeyboardEvent) => {
       if (event.key !== "Escape") return
-      const current = liveRef.current
-      if (current && memoRef.current !== (current.memo ?? "")) {
-        updateBook(current.id, { memo: memoRef.current })
+      event.preventDefault()
+      if (discardOpen) {
+        setDiscardOpen(false)
+        return
       }
-      onOpenChange(false)
+      requestClose()
     }
     window.addEventListener("keydown", onKey)
     const previous = document.body.style.overflow
@@ -124,11 +151,18 @@ export function BookDetailDialog({
       window.removeEventListener("keydown", onKey)
       document.body.style.overflow = previous
     }
-  }, [open, onOpenChange, updateBook])
+  }, [open, discardOpen, onOpenChange])
 
   useEffect(() => {
-    setMemo(live?.memo ?? "")
-  }, [live?.id, live?.memo])
+    if (!open) {
+      setMemo("")
+      setDiscardOpen(false)
+      return
+    }
+    if (!live) return
+    setMemo(live.memo ?? "")
+    setDiscardOpen(false)
+  }, [open, live?.id])
 
   if (!mounted || !open || !live) return null
 
@@ -138,16 +172,20 @@ export function BookDetailDialog({
   const thumbnail = detail?.thumbnail || live.thumbnail
   const addedAt = formatAddedAt(live.addedAt)
   const selectedCategories = live.categoryIds ?? []
+  const assignedCategories = categories.filter((category) =>
+    selectedCategories.includes(category.id)
+  )
+  const status = readingStatusOf(live)
+  const dirty = memo !== (live.memo ?? "")
 
-  function persistMemo() {
-    if (memo !== (live.memo ?? "")) {
-      updateBook(live.id, { memo })
-    }
+  function cycleStatus() {
+    const next = nextReadingStatus(status)
+    updateBook(live.id, { readingStatus: next })
   }
 
-  function close() {
-    persistMemo()
-    onOpenChange(false)
+  function saveMemo() {
+    if (!dirty) return
+    updateBook(live.id, { memo })
   }
 
   return createPortal(
@@ -156,7 +194,7 @@ export function BookDetailDialog({
         type="button"
         className="absolute inset-0 bg-[rgba(59,36,20,0.32)]"
         aria-label="닫기"
-        onClick={close}
+        onClick={requestClose}
       />
       <div
         role="dialog"
@@ -170,24 +208,41 @@ export function BookDetailDialog({
           size="icon-sm"
           className="absolute top-3 right-3 z-10 rounded-full"
           aria-label="닫기"
-          onClick={close}
+          onClick={requestClose}
         >
           ✕
         </Button>
 
-        <div className="flex justify-center pt-1">
-          {thumbnail ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={thumbnail}
-              alt=""
-              className="h-52 w-[8.75rem] rounded-xl object-cover shadow-[0_10px_24px_rgba(59,36,20,0.16)]"
-            />
-          ) : (
-            <span className="flex h-52 w-[8.75rem] items-end rounded-xl bg-[var(--wood)] px-2 pb-2 text-[11px] leading-tight text-[#FFF8F0]">
-              {title}
-            </span>
-          )}
+        <div className="relative w-full overflow-visible pt-1">
+          <div className="relative mx-auto h-52 w-[8.75rem]">
+            {thumbnail ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={thumbnail}
+                alt=""
+                className="h-full w-full rounded-xl object-cover shadow-[0_10px_24px_rgba(59,36,20,0.16)]"
+              />
+            ) : (
+              <span className="flex h-full w-full items-end rounded-xl bg-[var(--wood)] px-2 pb-2 text-[11px] leading-tight text-[#FFF8F0]">
+                {title}
+              </span>
+            )}
+            <button
+              type="button"
+              className={cn(
+                "absolute bottom-0 left-[calc(100%+8px)] whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-medium",
+                status === "unread"
+                  ? "bg-[color-mix(in_srgb,var(--wood)_12%,transparent)] text-[var(--foreground)]"
+                  : status === "reading"
+                    ? "bg-[var(--wood)] text-[#FFF8F0]"
+                    : "bg-[var(--terracotta)] text-[#FFF8F0]"
+              )}
+              aria-label={`읽기 상태 ${READING_STATUS_LABEL[status]}. 누르면 다음 상태로 바뀝니다.`}
+              onClick={cycleStatus}
+            >
+              {READING_STATUS_LABEL[status]}
+            </button>
+          </div>
         </div>
 
         <h2
@@ -221,37 +276,16 @@ export function BookDetailDialog({
         </ul>
 
         <div className="grid gap-3">
-          <button
-            type="button"
-            className={cn(
-              "h-10 rounded-full text-sm",
-              live.reading
-                ? "bg-[var(--wood)] text-[#FFF8F0]"
-                : "bg-[color-mix(in_srgb,var(--wood)_12%,transparent)]"
-            )}
-            onClick={() => updateBook(live.id, { reading: !live.reading })}
-          >
-            읽는중
-          </button>
-
-          <label className="grid gap-1.5">
-            <span className="text-sm font-medium">메모</span>
-            <Textarea
-              value={memo}
-              onChange={(event) => setMemo(event.target.value)}
-              onBlur={persistMemo}
-              placeholder="이 책에 남기고 싶은 말"
-              className="min-h-24 rounded-2xl bg-[color-mix(in_srgb,var(--wood)_8%,transparent)]"
-            />
-          </label>
-
           <div className="grid gap-1.5">
             <span className="text-sm font-medium">카테고리</span>
-            {categories.length === 0 ? (
-              <p className="text-xs text-muted-foreground">
-                책장 왼쪽 위 + 로 칸을 만들 수 있어요. 예: 추천 받은 책
-              </p>
+            {assignedCategories.length === 0 ? (
+              <p className="text-sm text-muted-foreground">없음</p>
             ) : (
+              <p className="text-sm wrap-break-word">
+                {assignedCategories.map((category) => category.name).join(", ")}
+              </p>
+            )}
+            {categories.length > 0 ? (
               <div className="flex flex-wrap gap-1.5">
                 {categories.map((category) => {
                   const on = selectedCategories.includes(category.id)
@@ -277,7 +311,28 @@ export function BookDetailDialog({
                   )
                 })}
               </div>
-            )}
+            ) : null}
+          </div>
+
+          <div className="grid gap-1.5">
+            <span className="text-sm font-medium">메모</span>
+            <Textarea
+              value={memo}
+              onChange={(event) => setMemo(event.target.value)}
+              placeholder="이 책에 남기고 싶은 말"
+              className="min-h-24 rounded-2xl bg-[color-mix(in_srgb,var(--wood)_8%,transparent)]"
+            />
+            <div className="flex justify-end">
+              <Button
+                type="button"
+                size="sm"
+                className="h-8 rounded-full px-3 text-xs"
+                disabled={!dirty}
+                onClick={saveMemo}
+              >
+                저장
+              </Button>
+            </div>
           </div>
         </div>
 
@@ -299,12 +354,51 @@ export function BookDetailDialog({
           onClick={() => {
             removeBook(live.id)
             onOpenChange(false)
-            onOpenChange(false)
           }}
         >
           책장에서 빼기
         </Button>
       </div>
+      {discardOpen ? (
+        <div className="absolute inset-0 z-20 flex items-center justify-center p-6">
+          <button
+            type="button"
+            className="absolute inset-0 bg-[rgba(59,36,20,0.28)]"
+            aria-label="취소"
+            onClick={() => setDiscardOpen(false)}
+          />
+          <div
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="discard-title"
+            className="relative z-10 w-full max-w-xs rounded-[24px] bg-[var(--card)] p-5 text-[var(--card-foreground)] shadow-[0_18px_40px_rgba(59,36,20,0.22)]"
+          >
+            <p id="discard-title" className="font-medium">
+              저장하지 않고 닫을까요?
+            </p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              메모 변경이 저장되지 않습니다.
+            </p>
+            <div className="mt-4 grid grid-cols-2 gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                className="h-11 rounded-2xl"
+                onClick={() => setDiscardOpen(false)}
+              >
+                취소
+              </Button>
+              <Button
+                type="button"
+                className="h-11 rounded-2xl"
+                onClick={discardAndClose}
+              >
+                닫기
+              </Button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>,
     document.body
   )
