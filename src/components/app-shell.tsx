@@ -70,9 +70,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="flex min-h-full flex-col">
+    <div
+      className={cn(
+        "flex flex-col",
+        pathname === "/" ? "h-dvh overflow-hidden" : "min-h-full"
+      )}
+    >
       <SketchFilter />
-      <header className="w-full">
+      <header className="w-full shrink-0">
         <div className="mx-auto flex w-full max-w-md items-center justify-between px-6 pt-5">
           <Link href={session ? "/" : "/login"} aria-label="다독 홈" className="block">
             <DadokLogo className={authPath ? "h-[4.75rem] w-[4.75rem]" : "h-14 w-14"} />
@@ -80,7 +85,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           {session && !authPath ? <HeaderBell /> : null}
         </div>
       </header>
-      <main className={cn("mx-auto w-full max-w-md flex-1 px-6 pt-3", authPath ? "pb-10" : "pb-28")}>
+      <main
+        className={cn(
+          "mx-auto w-full flex-1 pt-3",
+          authPath
+            ? "max-w-md px-6 pb-10"
+            : pathname === "/"
+              ? "min-h-0 max-w-none flex-1 px-0 pb-0"
+              : "max-w-md px-6 pb-28"
+        )}
+      >
         {children}
       </main>
       {authPath ? null : (
