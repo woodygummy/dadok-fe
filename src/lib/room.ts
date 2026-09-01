@@ -47,7 +47,7 @@ export const ROOM_ITEMS: Record<RoomLayer, RoomItem[]> = {
     { id: "plant-3", name: "화분3", color: "#7D8B58" },
   ],
   bookshelf: [
-    { id: "bookshelf-1", name: "책장1", color: "#F6F0E2" },
+    { id: "bookshelf-1", name: "책장1", color: "#C99655" },
     { id: "bookshelf-2", name: "책장2", color: "#4A2C1C" },
     { id: "bookshelf-3", name: "책장3", color: "#2C3E6A" },
   ],
@@ -62,7 +62,7 @@ export const ROOM_ITEMS: Record<RoomLayer, RoomItem[]> = {
     { id: "desk-3", name: "책상3", color: "#B6A392" },
   ],
   clock: [
-    { id: "clock-1", name: "시계1", color: "#F6F0E2" },
+    { id: "clock-1", name: "시계1", color: "#E07A5F" },
     { id: "clock-2", name: "시계2", color: "#2C3E6A" },
     { id: "clock-3", name: "시계3", color: "#D6A21A" },
   ],

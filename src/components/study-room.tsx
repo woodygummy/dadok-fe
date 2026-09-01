@@ -82,123 +82,121 @@ export function StudyRoom() {
   const tabItems = ROOM_ITEMS[tab]
 
   return (
-    <div className="flex h-full min-h-0 flex-col">
-      <div className={cn("relative min-h-0", shopOpen ? "flex-[60]" : "flex-1")}>
-        <SketchFrame className="absolute inset-0 rounded-[10px]">
-          <div className="relative size-full">
-            <div className="absolute inset-0" style={{ backgroundColor: wallpaper.color }} />
-            <div
-              className="absolute inset-x-0 bottom-0 h-[32%]"
-              style={{ backgroundColor: floor.color }}
-            />
+    <div className="relative h-full min-h-0">
+      <SketchFrame className="absolute inset-0 rounded-[10px]">
+        <div className="relative size-full">
+          <div className="absolute inset-0" style={{ backgroundColor: wallpaper.color }} />
+          <div
+            className="absolute inset-x-0 bottom-0 h-[32%]"
+            style={{ backgroundColor: floor.color }}
+          />
 
+          <Placeholder
+            name={clock.name}
+            color={clock.color}
+            round
+            className="absolute top-[12%] left-[8%] z-[2] size-[18%] min-h-12 min-w-12"
+          />
+          <Placeholder
+            name={lamp.name}
+            color={lamp.color}
+            className="absolute top-[5%] left-[40%] z-[3] h-[16%] w-[18%] min-h-10"
+          />
+          <Link
+            href="/shelf"
+            aria-label={`책장으로 이동, 책 ${books.length}권`}
+            className="absolute top-[8%] right-[6%] bottom-[32%] z-[4] w-[22%] min-w-16"
+          >
             <Placeholder
-              name={clock.name}
-              color={clock.color}
-              round
-              className="absolute top-[12%] left-[8%] z-[2] size-[18%] min-h-12 min-w-12"
+              name={bookshelf.name}
+              color={bookshelf.color}
+              className="size-full flex-col gap-1 px-1.5 py-2"
             />
-            <Placeholder
-              name={lamp.name}
-              color={lamp.color}
-              className="absolute top-[5%] left-[40%] z-[3] h-[16%] w-[18%] min-h-10"
-            />
-            <Link
-              href="/shelf"
-              aria-label={`책장으로 이동, 책 ${books.length}권`}
-              className="absolute top-[16%] right-[6%] bottom-[10%] z-[4] w-[22%] min-w-16"
-            >
-              <Placeholder
-                name={bookshelf.name}
-                color={bookshelf.color}
-                className="size-full flex-col gap-1 px-1.5 py-2"
-              />
-            </Link>
-            <Placeholder
-              name={plant.name}
-              color={plant.color}
-              className="absolute bottom-[8%] left-[5%] z-[5] h-[18%] w-[14%] min-h-12"
-            />
-            <Placeholder
-              name={chair.name}
-              color={chair.color}
-              className="absolute bottom-[12%] left-[30%] z-[6] h-[20%] w-[16%] min-h-12"
-            />
-            <Placeholder
-              name={desk.name}
-              color={desk.color}
-              className="absolute right-[30%] bottom-[7%] left-[22%] z-[7] h-[10%] min-h-8 text-[#F6F0E2]"
-            />
+          </Link>
+          <Placeholder
+            name={plant.name}
+            color={plant.color}
+            className="absolute bottom-[32%] left-[5%] z-[5] h-[18%] w-[14%] min-h-12"
+          />
+          <Placeholder
+            name={chair.name}
+            color={chair.color}
+            className="absolute bottom-[32%] left-[30%] z-[6] h-[20%] w-[16%] min-h-12"
+          />
+          <Placeholder
+            name={desk.name}
+            color={desk.color}
+            className="absolute right-[30%] bottom-[32%] left-[22%] z-[7] h-[10%] min-h-8 text-[#F6F0E2]"
+          />
 
-            <button
-              type="button"
-              aria-label={shopOpen ? "상점 닫기" : "상점 열기"}
-              aria-pressed={shopOpen}
-              onClick={() => setShopOpen((open) => !open)}
-              className="absolute top-3 right-3 z-20 flex size-11 items-center justify-center rounded-full bg-[#3b2414] text-[#FFF8F0]"
-            >
-              {shopOpen ? <X className="size-5" /> : <Store className="size-5" />}
-            </button>
-          </div>
-        </SketchFrame>
-      </div>
+          <button
+            type="button"
+            aria-label={shopOpen ? "상점 닫기" : "상점 열기"}
+            aria-pressed={shopOpen}
+            onClick={() => setShopOpen((open) => !open)}
+            className="absolute top-3 right-3 z-30 flex size-11 items-center justify-center rounded-full bg-[#3b2414] text-[#FFF8F0]"
+          >
+            {shopOpen ? <X className="size-5" /> : <Store className="size-5" />}
+          </button>
 
-      {shopOpen ? (
-      <div className="mt-3 flex min-h-0 flex-[40] flex-col">
-        <div className="flex gap-1.5 overflow-x-auto pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {ROOM_LAYERS.map((layer) => {
-            const selected = tab === layer
-            return (
-              <button
-                key={layer}
-                type="button"
-                onClick={() => setTab(layer)}
-                className={cn(
-                  "shrink-0 rounded-full px-3 py-1.5 text-[13px]",
-                  selected
-                    ? "bg-[#3b2414] text-[#FFF8F0]"
-                    : "bg-[#F3EDE3] text-[#3b2414]"
-                )}
-              >
-                {ROOM_LAYER_LABEL[layer]}
-              </button>
-            )
-          })}
-        </div>
-        <div className="min-h-0 flex-1 overflow-x-auto overflow-y-hidden pt-1">
-          <div className="flex h-full gap-3">
-            {tabItems.map((item) => {
-              const selected = loadout[tab] === item.id
-              return (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={() => selectItem(tab, item.id)}
-                  aria-pressed={selected}
-                  className="h-full w-[30%] min-w-[5.5rem] shrink-0"
-                >
-                  <SketchFrame
-                    className={cn(
-                      "h-full rounded-[10px]",
-                      selected ? "ring-2 ring-[#3b2414] ring-offset-2" : ""
-                    )}
-                  >
-                    <div
-                      className="flex size-full flex-col items-center justify-center gap-2 px-2"
-                      style={{ backgroundColor: item.color }}
+          {shopOpen ? (
+            <div className="absolute inset-x-0 bottom-0 z-20 flex h-[40%] min-h-[10.5rem] flex-col bg-[#FFF8F0]/95 px-3 pt-2 pb-3">
+              <div className="flex gap-1.5 overflow-x-auto pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                {ROOM_LAYERS.map((layer) => {
+                  const selected = tab === layer
+                  return (
+                    <button
+                      key={layer}
+                      type="button"
+                      onClick={() => setTab(layer)}
+                      className={cn(
+                        "shrink-0 rounded-full px-3 py-1.5 text-[13px]",
+                        selected
+                          ? "bg-[#3b2414] text-[#FFF8F0]"
+                          : "bg-[#F3EDE3] text-[#3b2414]"
+                      )}
                     >
-                      <span className="text-[13px] font-medium text-[#3A3A38]">
-                        {item.name}
-                      </span>
-                    </div>
-                  </SketchFrame>
-                </button>
-              )
-            })}
-          </div>
+                      {ROOM_LAYER_LABEL[layer]}
+                    </button>
+                  )
+                })}
+              </div>
+              <div className="min-h-0 flex-1 overflow-x-auto overflow-y-hidden pt-1">
+                <div className="flex h-full gap-3">
+                  {tabItems.map((item) => {
+                    const selected = loadout[tab] === item.id
+                    return (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => selectItem(tab, item.id)}
+                        aria-pressed={selected}
+                        className="h-full w-[30%] min-w-[5.5rem] shrink-0"
+                      >
+                        <SketchFrame
+                          className={cn(
+                            "h-full rounded-[10px]",
+                            selected ? "ring-2 ring-[#3b2414] ring-offset-2" : ""
+                          )}
+                        >
+                          <div
+                            className="flex size-full flex-col items-center justify-center gap-2 px-2"
+                            style={{ backgroundColor: item.color }}
+                          >
+                            <span className="text-[13px] font-medium text-[#3A3A38]">
+                              {item.name}
+                            </span>
+                          </div>
+                        </SketchFrame>
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            </div>
+          ) : null}
         </div>
-      </div>
-      ) : null}
+      </SketchFrame>
     </div>
   )
 }
