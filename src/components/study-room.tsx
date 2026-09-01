@@ -1,153 +1,204 @@
 "use client"
 
-import { useCoverColor } from "@/lib/use-cover-color"
+import { useCallback, useEffect, useState } from "react"
+import Link from "next/link"
+import { Store, X } from "lucide-react"
+import { SketchFrame } from "@/components/sketch-stroke"
+import {
+  DEFAULT_ROOM_LOADOUT,
+  ROOM_ITEMS,
+  ROOM_LAYER_LABEL,
+  ROOM_LAYERS,
+  parseRoomLoadout,
+  roomItemOf,
+  type RoomLayer,
+  type RoomLoadout,
+} from "@/lib/room"
 import { useDadok } from "@/lib/store"
-import type { Book } from "@/lib/types"
+import { cn } from "@/lib/utils"
 
-const SHELF_ROWS = 4
-const BOOKS_PER_ROW = 6
-const MAX_VISIBLE = SHELF_ROWS * BOOKS_PER_ROW
+const ROOM_STORAGE_KEY = "dadok-fe:room-loadout"
 
-const SHELVES = [
-  { x: 296, y: 128 },
-  { x: 298, y: 156 },
-  { x: 300, y: 184 },
-  { x: 302, y: 212 },
-] as const
-
-function StudySpine({
-  book,
-  x,
-  y,
+function Placeholder({
+  name,
+  color,
+  className,
+  round,
 }: {
-  book: Book
-  x: number
-  y: number
+  name: string
+  color: string
+  className?: string
+  round?: boolean
 }) {
-  const color = useCoverColor(
-    book.thumbnail,
-    `${book.title}:${book.thumbnail ?? "none"}`
-  )
-  const height = 16 + (book.id.charCodeAt(book.id.length - 1) % 5)
-
   return (
-    <rect
-      x={x}
-      y={y}
-      width="6.5"
-      height={height}
-      rx="1.1"
-      fill={color}
-      transform={`rotate(-24 ${x + 3.2} ${y + height / 2})`}
-    />
+    <div
+      className={cn(
+        "flex items-center justify-center text-center text-[11px] font-medium leading-tight text-[#3A3A38]",
+        round ? "rounded-full" : "rounded-[6px]",
+        className
+      )}
+      style={{ backgroundColor: color }}
+    >
+      {name}
+    </div>
   )
+}
+
+function loadSavedLoadout(): RoomLoadout {
+  if (typeof window === "undefined") return DEFAULT_ROOM_LOADOUT
+  try {
+    return parseRoomLoadout(JSON.parse(window.localStorage.getItem(ROOM_STORAGE_KEY) ?? "null"))
+  } catch {
+    return DEFAULT_ROOM_LOADOUT
+  }
 }
 
 export function StudyRoom() {
   const { books } = useDadok()
-  const visible = books.slice(0, MAX_VISIBLE)
+  const [shopOpen, setShopOpen] = useState(false)
+  const [tab, setTab] = useState<RoomLayer>("chair")
+  const [loadout, setLoadout] = useState<RoomLoadout>(DEFAULT_ROOM_LOADOUT)
+
+  useEffect(() => {
+    setLoadout(loadSavedLoadout())
+  }, [])
+
+  const selectItem = useCallback((layer: RoomLayer, id: string) => {
+    setLoadout((current) => {
+      const next = { ...current, [layer]: id }
+      window.localStorage.setItem(ROOM_STORAGE_KEY, JSON.stringify(next))
+      return next
+    })
+  }, [])
+
+  const wallpaper = roomItemOf("wallpaper", loadout.wallpaper)
+  const floor = roomItemOf("floor", loadout.floor)
+  const plant = roomItemOf("plant", loadout.plant)
+  const bookshelf = roomItemOf("bookshelf", loadout.bookshelf)
+  const lamp = roomItemOf("lamp", loadout.lamp)
+  const desk = roomItemOf("desk", loadout.desk)
+  const clock = roomItemOf("clock", loadout.clock)
+  const chair = roomItemOf("chair", loadout.chair)
+  const tabItems = ROOM_ITEMS[tab]
 
   return (
-    <div className="mx-auto w-full max-w-[24rem]">
-      <svg viewBox="0 0 400 380" className="h-auto w-full" role="img">
-        <title>나만의 서재</title>
-        <defs>
-          <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#cfe6f2" />
-            <stop offset="100%" stopColor="#e7f3f8" />
-          </linearGradient>
-          <linearGradient id="sun" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="#ffe7a8" stopOpacity="0.7" />
-            <stop offset="70%" stopColor="#ffe7a8" stopOpacity="0" />
-          </linearGradient>
-          <linearGradient id="wood-top" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="#e2b87a" />
-            <stop offset="100%" stopColor="#c99655" />
-          </linearGradient>
-          <linearGradient id="wood-side" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#b07a42" />
-            <stop offset="100%" stopColor="#8d5e32" />
-          </linearGradient>
-          <radialGradient id="rug" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="#d9d4cc" />
-            <stop offset="100%" stopColor="#c4bfb6" />
-          </radialGradient>
-        </defs>
+    <div className="flex h-full min-h-0 flex-col">
+      <div className={cn("relative min-h-0", shopOpen ? "flex-[60]" : "flex-1")}>
+        <SketchFrame className="absolute inset-0 rounded-[10px]">
+          <div className="relative size-full">
+            <div className="absolute inset-0" style={{ backgroundColor: wallpaper.color }} />
+            <div
+              className="absolute inset-x-0 bottom-0 h-[32%]"
+              style={{ backgroundColor: floor.color }}
+            />
 
-        <ellipse cx="200" cy="318" rx="168" ry="48" fill="url(#rug)" />
+            <Placeholder
+              name={clock.name}
+              color={clock.color}
+              round
+              className="absolute top-[12%] left-[8%] z-[2] size-[18%] min-h-12 min-w-12"
+            />
+            <Placeholder
+              name={lamp.name}
+              color={lamp.color}
+              className="absolute top-[5%] left-[40%] z-[3] h-[16%] w-[18%] min-h-10"
+            />
+            <Link
+              href="/shelf"
+              aria-label={`책장으로 이동, 책 ${books.length}권`}
+              className="absolute top-[16%] right-[6%] bottom-[10%] z-[4] w-[22%] min-w-16"
+            >
+              <Placeholder
+                name={bookshelf.name}
+                color={bookshelf.color}
+                className="size-full flex-col gap-1 px-1.5 py-2"
+              />
+            </Link>
+            <Placeholder
+              name={plant.name}
+              color={plant.color}
+              className="absolute bottom-[8%] left-[5%] z-[5] h-[18%] w-[14%] min-h-12"
+            />
+            <Placeholder
+              name={chair.name}
+              color={chair.color}
+              className="absolute bottom-[12%] left-[30%] z-[6] h-[20%] w-[16%] min-h-12"
+            />
+            <Placeholder
+              name={desk.name}
+              color={desk.color}
+              className="absolute right-[30%] bottom-[7%] left-[22%] z-[7] h-[10%] min-h-8 text-[#F6F0E2]"
+            />
 
-        <path d="M70 210 L200 150 L330 210 L330 250 L200 310 L70 250 Z" fill="#efe6d4" />
-        <path d="M70 120 L200 70 L200 150 L70 210 Z" fill="#f4ebda" />
-        <path d="M200 70 L330 120 L330 210 L200 150 Z" fill="#e8dcc8" />
+            <button
+              type="button"
+              aria-label={shopOpen ? "상점 닫기" : "상점 열기"}
+              aria-pressed={shopOpen}
+              onClick={() => setShopOpen((open) => !open)}
+              className="absolute top-3 right-3 z-20 flex size-11 items-center justify-center rounded-full bg-[#3b2414] text-[#FFF8F0]"
+            >
+              {shopOpen ? <X className="size-5" /> : <Store className="size-5" />}
+            </button>
+          </div>
+        </SketchFrame>
+      </div>
 
-        <g>
-          <path d="M92 128 L168 96 L168 168 L92 198 Z" fill="#f7ecd4" />
-          <path d="M104 132 L156 110 L156 154 L104 176 Z" fill="url(#sky)" />
-          <path d="M130 121 L130 165" stroke="#f7ecd4" strokeWidth="5" />
-          <path
-            d="M96 126 C112 150 108 188 102 196"
-            fill="none"
-            stroke="#ead7b0"
-            strokeWidth="14"
-            strokeLinecap="round"
-          />
-          <path
-            d="M164 98 C150 128 154 168 160 186"
-            fill="none"
-            stroke="#ead7b0"
-            strokeWidth="14"
-            strokeLinecap="round"
-          />
-          <polygon points="110,136 210,196 210,250 110,190" fill="url(#sun)" />
-        </g>
-
-        <g>
-          <ellipse cx="108" cy="292" rx="28" ry="10" fill="#c9b59a" />
-          <path d="M88 292 L96 248 L120 248 L128 292 Z" fill="#c4785a" />
-          <ellipse cx="108" cy="248" rx="18" ry="7" fill="#b56b4e" />
-          <ellipse cx="90" cy="214" rx="22" ry="26" fill="#4f7d48" />
-          <ellipse cx="118" cy="208" rx="24" ry="28" fill="#67975d" />
-          <ellipse cx="108" cy="190" rx="20" ry="24" fill="#3f6a3c" />
-          <ellipse cx="128" cy="226" rx="16" ry="18" fill="#5a8a52" />
-        </g>
-
-        <g>
-          <path d="M132 250 L248 204 L292 226 L176 274 Z" fill="url(#wood-top)" />
-          <path d="M132 250 L176 274 L176 292 L132 268 Z" fill="url(#wood-side)" />
-          <path d="M176 274 L292 226 L292 244 L176 292 Z" fill="#8a5a2e" />
-        </g>
-
-        <g>
-          <path d="M198 286 L228 272 L244 282 L214 296 Z" fill="#c99655" />
-          <path d="M208 258 L230 248 L238 262 L216 272 Z" fill="url(#wood-top)" />
-          <path d="M208 258 L216 272 L216 286 L208 272 Z" fill="url(#wood-side)" />
-        </g>
-
-        <a href="/shelf" aria-label={`책장으로 이동, 책 ${books.length}권`}>
-          <g className="cursor-pointer">
-            <path d="M268 118 L328 92 L348 104 L288 130 Z" fill="url(#wood-top)" />
-            <path d="M268 118 L288 130 L288 262 L268 246 Z" fill="url(#wood-side)" />
-            <path d="M288 130 L348 104 L348 236 L288 262 Z" fill="#d2a66a" />
-            <path d="M292 154 L342 132" stroke="#f6edd8" strokeWidth="11" strokeLinecap="round" />
-            <path d="M292 182 L342 160" stroke="#f6edd8" strokeWidth="11" strokeLinecap="round" />
-            <path d="M292 210 L342 188" stroke="#f6edd8" strokeWidth="11" strokeLinecap="round" />
-            <path d="M292 238 L342 216" stroke="#f6edd8" strokeWidth="11" strokeLinecap="round" />
-            {visible.map((book, index) => {
-              const row = Math.floor(index / BOOKS_PER_ROW)
-              const col = index % BOOKS_PER_ROW
-              const shelf = SHELVES[row]
+      {shopOpen ? (
+      <div className="mt-3 flex min-h-0 flex-[40] flex-col">
+        <div className="flex gap-1.5 overflow-x-auto pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          {ROOM_LAYERS.map((layer) => {
+            const selected = tab === layer
+            return (
+              <button
+                key={layer}
+                type="button"
+                onClick={() => setTab(layer)}
+                className={cn(
+                  "shrink-0 rounded-full px-3 py-1.5 text-[13px]",
+                  selected
+                    ? "bg-[#3b2414] text-[#FFF8F0]"
+                    : "bg-[#F3EDE3] text-[#3b2414]"
+                )}
+              >
+                {ROOM_LAYER_LABEL[layer]}
+              </button>
+            )
+          })}
+        </div>
+        <div className="min-h-0 flex-1 overflow-x-auto overflow-y-hidden pt-1">
+          <div className="flex h-full gap-3">
+            {tabItems.map((item) => {
+              const selected = loadout[tab] === item.id
               return (
-                <StudySpine
-                  key={book.id}
-                  book={book}
-                  x={shelf.x + col * 8.1}
-                  y={shelf.y - col * 3.55}
-                />
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => selectItem(tab, item.id)}
+                  aria-pressed={selected}
+                  className="h-full w-[30%] min-w-[5.5rem] shrink-0"
+                >
+                  <SketchFrame
+                    className={cn(
+                      "h-full rounded-[10px]",
+                      selected ? "ring-2 ring-[#3b2414] ring-offset-2" : ""
+                    )}
+                  >
+                    <div
+                      className="flex size-full flex-col items-center justify-center gap-2 px-2"
+                      style={{ backgroundColor: item.color }}
+                    >
+                      <span className="text-[13px] font-medium text-[#3A3A38]">
+                        {item.name}
+                      </span>
+                    </div>
+                  </SketchFrame>
+                </button>
               )
             })}
-          </g>
-        </a>
-      </svg>
+          </div>
+        </div>
+      </div>
+      ) : null}
     </div>
   )
 }
