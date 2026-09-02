@@ -7,7 +7,7 @@ import {
   useMemo,
   useSyncExternalStore,
 } from "react"
-import { fetchMe, loginAccount, registerAccount, updateLoginId } from "@/lib/auth-api"
+import { fetchMe, loginAccount, registerAccount, updateLoginId, updateNickname } from "@/lib/auth-api"
 import { capturePreviewState, isCapturePreview } from "@/lib/capture-preview"
 import { applyTheme } from "@/lib/theme"
 import {
@@ -78,7 +78,7 @@ type StoreValue = {
   removeBook: (id: string) => void
   addCategory: (name: string) => BookCategory | null
   removeCategory: (id: string) => void
-  setNickname: (nickname: string) => void
+  setNickname: (nickname: string) => Promise<void>
   setLoginId: (loginId: string) => Promise<void>
   setTheme: (theme: ThemeName) => void
   setAvatar: (avatarUrl: string | null) => void
@@ -269,13 +269,29 @@ export function DadokProvider({ children }: { children: React.ReactNode }) {
     })
   }, [])
 
-  const setNickname = useCallback((nickname: string) => {
+  const setNickname = useCallback(async (nickname: string) => {
+    const next = nickname.trim()
+    if (!next) {
+      throw new Error("닉네임을 입력해 주세요.")
+    }
+    const token = snapshot.session?.token
+    const current = snapshot.session?.user
+    if (!token || !current || isCapturePreview()) {
+      commit({
+        ...snapshot,
+        profile: { ...snapshot.profile, nickname: next },
+      })
+      return
+    }
+    const result = await updateNickname(token, next)
+    if (result.token) saveToken(result.token)
     commit({
       ...snapshot,
       profile: {
-        ...snapshot.profile,
-        nickname: nickname.trim() || snapshot.profile.nickname,
+        ...profileFromUser(snapshot.profile, result.user),
+        nickname: result.user.nickname,
       },
+      session: { token: result.token || token, user: result.user },
     })
   }, [])
 

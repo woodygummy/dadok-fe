@@ -4,9 +4,16 @@ import { useEffect, useState, type ChangeEvent } from "react"
 import { useRouter } from "next/navigation"
 import { Pencil } from "lucide-react"
 import { BackLink } from "@/components/back-link"
+import { SketchFrame } from "@/components/sketch-stroke"
 import { Button } from "@/components/ui/button"
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
-import { AuthError } from "@/lib/auth-api"
+import { AuthError, checkNicknameAvailable } from "@/lib/auth-api"
 import { loginIdError as loginIdFieldError } from "@/lib/auth-validate"
 import { SocialAuthButtons } from "@/components/social-auth-buttons"
 import { readAvatarFile } from "@/lib/read-avatar"
@@ -24,13 +31,13 @@ const PROVIDER_ORDER: Provider[] = ["kakao", "google", "naver"]
 export default function AccountPage() {
   const { profile, session, setNickname, setLoginId, setAvatar, logout, refreshUser } = useDadok()
   const router = useRouter()
-  const [nickname, setNicknameDraft] = useState(profile.nickname)
   const [loginIdDraft, setLoginIdDraft] = useState(session?.user.loginId ?? "")
   const [loginIdMessage, setLoginIdMessage] = useState("")
-
-  useEffect(() => {
-    setNicknameDraft(profile.nickname)
-  }, [profile.nickname])
+  const [nicknameOpen, setNicknameOpen] = useState(false)
+  const [nicknameDraft, setNicknameDraft] = useState(profile.nickname)
+  const [nicknameMessage, setNicknameMessage] = useState("")
+  const [nicknameTaken, setNicknameTaken] = useState(false)
+  const [nicknameSaving, setNicknameSaving] = useState(false)
 
   useEffect(() => {
     setLoginIdDraft(session?.user.loginId ?? "")
@@ -40,12 +47,66 @@ export default function AccountPage() {
     void refreshUser()
   }, [refreshUser])
 
-  function saveNickname() {
-    if (!nickname.trim()) {
-      setNicknameDraft(profile.nickname)
+  useEffect(() => {
+    if (!nicknameOpen) return
+    const next = nicknameDraft.trim()
+    if (!next || next === profile.nickname) {
+      setNicknameTaken(false)
       return
     }
-    setNickname(nickname)
+    const token = session?.token
+    if (!token) return
+    let cancelled = false
+    const timer = window.setTimeout(() => {
+      void checkNicknameAvailable(token, next).then((result) => {
+        if (cancelled) return
+        if (result.available) {
+          setNicknameTaken(false)
+          return
+        }
+        setNicknameTaken(true)
+        setNicknameMessage(result.error || "이미 사용 중인 닉네임입니다.")
+      })
+    }, 280)
+    return () => {
+      cancelled = true
+      window.clearTimeout(timer)
+    }
+  }, [nicknameDraft, nicknameOpen, profile.nickname, session?.token])
+
+  function openNicknameModal() {
+    setNicknameDraft(profile.nickname)
+    setNicknameMessage("")
+    setNicknameTaken(false)
+    setNicknameOpen(true)
+  }
+
+  async function saveNickname() {
+    const next = nicknameDraft.trim()
+    if (!next) {
+      setNicknameMessage("닉네임을 입력해 주세요.")
+      return
+    }
+    if (next === profile.nickname) {
+      setNicknameOpen(false)
+      return
+    }
+    if (nicknameTaken) {
+      setNicknameMessage("이미 사용 중인 닉네임입니다.")
+      return
+    }
+    setNicknameSaving(true)
+    try {
+      await setNickname(next)
+      setNicknameMessage("")
+      setNicknameOpen(false)
+    } catch (err) {
+      setNicknameMessage(
+        err instanceof AuthError ? err.message : "닉네임을 바꾸지 못했습니다."
+      )
+    } finally {
+      setNicknameSaving(false)
+    }
   }
 
   async function saveLoginId() {
@@ -118,20 +179,87 @@ export default function AccountPage() {
             />
           </label>
         </div>
-        <Input
-          value={nickname}
-          onChange={(event) => setNicknameDraft(event.target.value)}
-          onBlur={saveNickname}
-          onKeyDown={(event) => {
-            if (event.key === "Enter") {
-              event.currentTarget.blur()
-            }
-          }}
-          maxLength={16}
-          className="h-8 w-auto max-w-[12rem] border-0 bg-transparent px-0 text-center font-serif text-lg font-semibold shadow-none focus-visible:ring-0"
-          aria-label="닉네임"
-        />
+        <div className="flex justify-center">
+          <div className="inline-flex max-w-[14rem] items-center">
+            <p className="truncate font-serif text-lg font-semibold">{profile.nickname}</p>
+            <button
+              type="button"
+              className="ml-0.5 inline-flex shrink-0 p-0.5 text-[var(--wood)]"
+              aria-label="닉네임 수정"
+              onClick={openNicknameModal}
+            >
+              <Pencil className="size-3.5" strokeWidth={2.2} />
+            </button>
+          </div>
+        </div>
       </div>
+
+      <Dialog
+        open={nicknameOpen}
+        onOpenChange={(next) => {
+          setNicknameOpen(next)
+          if (!next) {
+            setNicknameDraft(profile.nickname)
+            setNicknameMessage("")
+            setNicknameTaken(false)
+          }
+        }}
+      >
+        <DialogContent
+          showCloseButton={false}
+          className="inset-0 m-auto h-fit max-h-[calc(100vh-2rem)] w-full max-w-[min(28rem,calc(100%-2rem))] translate-x-0 translate-y-0 overflow-visible border-0 bg-transparent p-4 shadow-none ring-0 sm:max-w-md"
+        >
+          <div className="sketch-frame relative min-w-0 overflow-visible rounded-[24px] bg-[var(--niche)] p-5">
+            <DialogTitle className="font-serif text-lg">닉네임 수정</DialogTitle>
+            <SketchFrame className="mt-4 rounded-[16px]">
+              <Input
+                value={nicknameDraft}
+                maxLength={16}
+                onChange={(event) => {
+                  setNicknameDraft(event.target.value)
+                  setNicknameMessage("")
+                  setNicknameTaken(false)
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    event.preventDefault()
+                    void saveNickname()
+                  }
+                }}
+                autoFocus
+                aria-label="닉네임"
+                aria-invalid={Boolean(nicknameMessage) || undefined}
+                className="h-12 rounded-[16px] border-0 bg-transparent px-4 shadow-none focus-visible:border-transparent focus-visible:ring-0 dark:bg-transparent"
+              />
+            </SketchFrame>
+            {nicknameMessage ? (
+              <p className="mt-3 text-sm text-[var(--destructive)]">{nicknameMessage}</p>
+            ) : null}
+            <div className="mt-4 flex gap-2">
+              <DialogClose
+                render={
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="h-12 flex-1 rounded-3xl"
+                    disabled={nicknameSaving}
+                  />
+                }
+              >
+                닫기
+              </DialogClose>
+              <Button
+                type="button"
+                className="h-12 flex-1 rounded-3xl"
+                disabled={nicknameSaving || nicknameTaken}
+                onClick={() => void saveNickname()}
+              >
+                저장
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <div className="mx-auto w-full max-w-[17.75rem] space-y-6">
       <section className="sketch-frame rounded-[18px] bg-[var(--niche)]">

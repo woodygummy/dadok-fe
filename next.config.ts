@@ -19,6 +19,10 @@ const nextConfig: NextConfig = {
         destination: `${backendOrigin}/auth/me`,
       },
       {
+        source: "/auth/nickname-available",
+        destination: `${backendOrigin}/auth/nickname-available`,
+      },
+      {
         source: "/auth/:provider/start",
         destination: `${backendOrigin}/auth/:provider/start`,
       },

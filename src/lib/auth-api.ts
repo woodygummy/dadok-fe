@@ -118,6 +118,36 @@ export async function updateLoginId(
   return (await response.json()) as AuthResponse
 }
 
+export async function updateNickname(
+  token: string,
+  nickname: string
+): Promise<AuthResponse> {
+  const response = await request("/auth/me", {
+    method: "PATCH",
+    headers: { Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ nickname }),
+  })
+  if (!response.ok) {
+    throw new AuthError(await readError(response), response.status)
+  }
+  return (await response.json()) as AuthResponse
+}
+
+export async function checkNicknameAvailable(
+  token: string,
+  nickname: string
+): Promise<{ available: boolean; error?: string }> {
+  const response = await request("/auth/nickname-available", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ nickname }),
+  })
+  if (!response.ok) {
+    return { available: true }
+  }
+  return (await response.json()) as { available: boolean; error?: string }
+}
+
 export function oauthStartUrl(provider: Provider, token?: string) {
   const url = new URL(`/auth/${provider}/start`, apiOrigin())
   if (token) url.searchParams.set("token", token)
