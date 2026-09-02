@@ -24,7 +24,11 @@ export default function MePage() {
               {index > 0 ? <div className="sketch-line mx-4" /> : null}
               <Link
                 href={item.href}
-                className="flex items-center justify-between gap-3 px-5 py-[0.95rem]"
+                className={
+                  index === 0
+                    ? "flex items-center justify-between gap-3 px-5 pt-5 pb-[0.95rem]"
+                    : "flex items-center justify-between gap-3 px-5 py-[0.95rem]"
+                }
               >
                 <span className="text-[15px] font-medium">{item.label}</span>
                 <ChevronRight className="size-4 shrink-0 text-[#8a7a6c]" strokeWidth={2} />
@@ -35,7 +39,7 @@ export default function MePage() {
             <div className="sketch-line mx-4" />
             <Link
               href="/me/theme"
-              className="flex items-center justify-between gap-3 px-5 py-[0.95rem]"
+              className="flex items-center justify-between gap-3 px-5 pt-[0.95rem] pb-5"
             >
               <span className="text-[15px] font-medium">테마</span>
               <span className="rounded-full bg-[#4a3428] px-3.5 py-1 text-[13px] font-medium text-[#fff8f0]">

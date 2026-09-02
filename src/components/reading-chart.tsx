@@ -24,7 +24,7 @@ export function ReadingChart() {
   const peak = Math.max(1, ...counts)
 
   return (
-    <section className="sketch-frame w-full rounded-[18px] bg-[var(--niche)] px-4 pb-3 pt-4">
+    <section className="sketch-frame w-full rounded-[18px] bg-[var(--niche)] px-4 pb-5 pt-5">
       <div className="mb-4 flex items-end justify-between gap-3 px-1">
         <div>
           <h2 className="text-[15px] font-medium">월별 독서량</h2>

@@ -11,11 +11,13 @@ import { readAvatarFile } from "@/lib/read-avatar"
 import { useDadok } from "@/lib/store"
 import { type Provider } from "@/lib/types"
 
-const PROVIDER_LABEL: Record<Provider, string> = {
+const PROVIDER_NAME: Record<Provider, string> = {
   kakao: "카카오",
+  google: "구글",
   naver: "네이버",
-  google: "Google",
 }
+
+const PROVIDER_ORDER: Provider[] = ["kakao", "google", "naver"]
 
 export default function AccountPage() {
   const { profile, session, setNickname, setAvatar, logout } = useDadok()
@@ -92,8 +94,9 @@ export default function AccountPage() {
         />
       </div>
 
+      <div className="mx-auto w-full max-w-[17.75rem] space-y-6">
       <section className="sketch-frame rounded-[18px] bg-[var(--niche)]">
-        <div className="flex items-center justify-between gap-3 px-4 py-3.5">
+        <div className="flex items-center justify-between gap-3 px-4 pt-5 pb-3.5">
           <h2 className="shrink-0 text-sm font-medium">아이디</h2>
           <p className="min-w-0 truncate text-right text-sm text-muted-foreground">{loginId}</p>
         </div>
@@ -105,23 +108,23 @@ export default function AccountPage() {
           </p>
         </div>
         <div className="sketch-line mx-4" />
-        <div className="px-4 py-3.5">
-          <h2 className="text-sm font-medium">소셜 연동</h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {linked.length
-              ? linked.map((provider) => PROVIDER_LABEL[provider]).join(" · ")
-              : "아직 연동된 계정이 없습니다"}
-          </p>
-          {session ? (
-            <div className="mt-3">
-              <SocialAuthButtons
-                token={session.token}
-                mode="link"
-                providers={(["kakao", "naver", "google"] as Provider[]).filter(
-                  (provider) => !linked.includes(provider)
-                )}
-              />
-            </div>
+        <div className="flex items-center justify-between gap-3 px-4 pt-3.5 pb-5">
+          <h2 className="shrink-0 text-sm font-medium">
+            {linked.length ? "소셜 연동" : "소셜 연동하기"}
+          </h2>
+          {linked.length ? (
+            <p className="min-w-0 truncate text-right text-sm text-muted-foreground">
+              {PROVIDER_ORDER.filter((provider) => linked.includes(provider))
+                .map((provider) => PROVIDER_NAME[provider])
+                .join(" · ")}
+            </p>
+          ) : session ? (
+            <SocialAuthButtons
+              token={session.token}
+              mode="link"
+              variant="icons"
+              size="sm"
+            />
           ) : null}
         </div>
       </section>
@@ -137,6 +140,7 @@ export default function AccountPage() {
         >
           로그아웃
         </Button>
+      </div>
       </div>
     </div>
   )
