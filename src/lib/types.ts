@@ -60,6 +60,7 @@ export type Book = {
   fromMillie?: boolean
   reading?: boolean
   readingStatus?: ReadingStatus
+  finishedAt?: string | null
   memo?: string
   review?: string
   rating?: number | null

@@ -87,10 +87,17 @@ function parseBooks(value: unknown): Book[] {
     const row = item as Book
     if (typeof row.id !== "string" || typeof row.googleId !== "string") continue
     const readingStatus = readingStatusOf(row)
+    const finishedAt =
+      typeof row.finishedAt === "string" && row.finishedAt.trim()
+        ? row.finishedAt
+        : readingStatus === "done"
+          ? row.addedAt
+          : null
     books.push({
       ...row,
       readingStatus,
       reading: readingStatus === "reading",
+      finishedAt,
     })
   }
   return books

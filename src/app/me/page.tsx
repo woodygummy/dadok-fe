@@ -2,6 +2,7 @@
 
 import { ChevronRight } from "lucide-react"
 import Link from "next/link"
+import { ReadingChart } from "@/components/reading-chart"
 import { useDadok } from "@/lib/store"
 import { THEME_LABEL } from "@/lib/types"
 
@@ -14,8 +15,9 @@ export default function MePage() {
   ]
 
   return (
-    <div className="flex flex-col items-center pt-4">
-      <nav className="w-full max-w-[17.75rem]">
+    <div className="mx-auto flex w-full max-w-[17.75rem] flex-col gap-5 pt-4">
+      <ReadingChart />
+      <nav className="w-full">
         <ul className="sketch-frame rounded-[18px] bg-[var(--niche)]">
           {menu.map((item, index) => (
             <li key={item.label}>

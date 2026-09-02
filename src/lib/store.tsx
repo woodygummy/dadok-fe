@@ -168,6 +168,7 @@ export function DadokProvider({ children }: { children: React.ReactNode }) {
       memo: "",
       review: "",
       rating: null,
+      finishedAt: null,
       categoryIds: input.categoryIds ?? [],
     }
     commit({
@@ -194,11 +195,19 @@ export function DadokProvider({ children }: { children: React.ReactNode }) {
             rating: patch.rating !== undefined ? patch.rating : book.rating,
             categoryIds: patch.categoryIds ?? book.categoryIds,
           }
+          const prevStatus = readingStatusOf(book)
           const readingStatus = readingStatusOf(next)
+          let finishedAt = book.finishedAt ?? null
+          if (readingStatus === "done" && prevStatus !== "done") {
+            finishedAt = new Date().toISOString()
+          } else if (readingStatus !== "done") {
+            finishedAt = null
+          }
           return {
             ...next,
             readingStatus,
             reading: readingStatus === "reading",
+            finishedAt,
           }
         }),
       })

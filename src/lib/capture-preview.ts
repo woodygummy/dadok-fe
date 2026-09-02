@@ -8,6 +8,8 @@ const SAMPLE_BOOKS: Book[] = [
     authors: "헤르만 헤세",
     thumbnail: null,
     addedAt: "2026-03-12T00:00:00.000Z",
+    readingStatus: "done",
+    finishedAt: "2026-03-20T00:00:00.000Z",
   },
   {
     id: "book-2",
@@ -16,6 +18,8 @@ const SAMPLE_BOOKS: Book[] = [
     authors: "히가시노 게이고",
     thumbnail: null,
     addedAt: "2026-04-02T00:00:00.000Z",
+    readingStatus: "done",
+    finishedAt: "2026-04-20T00:00:00.000Z",
   },
   {
     id: "book-3",
@@ -24,6 +28,8 @@ const SAMPLE_BOOKS: Book[] = [
     authors: "한강",
     thumbnail: null,
     addedAt: "2026-05-18T00:00:00.000Z",
+    readingStatus: "done",
+    finishedAt: "2026-05-30T00:00:00.000Z",
   },
   {
     id: "book-4",
@@ -32,6 +38,8 @@ const SAMPLE_BOOKS: Book[] = [
     authors: "칼 세이건",
     thumbnail: null,
     addedAt: "2026-06-01T00:00:00.000Z",
+    readingStatus: "done",
+    finishedAt: "2026-06-18T00:00:00.000Z",
   },
   {
     id: "book-5",
@@ -40,6 +48,8 @@ const SAMPLE_BOOKS: Book[] = [
     authors: "생텍쥐페리",
     thumbnail: null,
     addedAt: "2026-06-21T00:00:00.000Z",
+    readingStatus: "done",
+    finishedAt: "2026-06-28T00:00:00.000Z",
   },
   {
     id: "book-6",
@@ -48,6 +58,8 @@ const SAMPLE_BOOKS: Book[] = [
     authors: "조지 오웰",
     thumbnail: null,
     addedAt: "2026-07-09T00:00:00.000Z",
+    readingStatus: "done",
+    finishedAt: "2026-07-22T00:00:00.000Z",
   },
   {
     id: "book-7",
@@ -64,6 +76,8 @@ const SAMPLE_BOOKS: Book[] = [
     authors: "이미예",
     thumbnail: null,
     addedAt: "2026-08-11T00:00:00.000Z",
+    readingStatus: "done",
+    finishedAt: "2026-08-19T00:00:00.000Z",
   },
 ]
 
