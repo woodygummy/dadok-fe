@@ -1,7 +1,19 @@
 import type { AuthUser, Provider } from "@/lib/types"
 
-export const API_BASE =
-  process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") || "http://localhost:8787"
+function trimOrigin(value?: string) {
+  return value?.replace(/\/$/, "") || ""
+}
+
+export function apiOrigin() {
+  if (typeof window !== "undefined") {
+    return window.location.origin
+  }
+  return (
+    trimOrigin(process.env.DADOK_API_URL) ||
+    trimOrigin(process.env.NEXT_PUBLIC_API_URL) ||
+    "http://127.0.0.1:8787"
+  )
+}
 
 export class AuthError extends Error {
   status: number
@@ -34,7 +46,7 @@ async function readError(response: Response) {
 
 async function request(path: string, init?: RequestInit) {
   try {
-    return await fetch(`${API_BASE}${path}`, {
+    return await fetch(`${apiOrigin()}${path}`, {
       ...init,
       headers: {
         "Content-Type": "application/json",
@@ -87,7 +99,7 @@ export async function fetchMe(token: string): Promise<AuthUser> {
 }
 
 export function oauthStartUrl(provider: Provider, token?: string) {
-  const url = new URL(`${API_BASE}/auth/${provider}/start`)
+  const url = new URL(`/auth/${provider}/start`, apiOrigin())
   if (token) url.searchParams.set("token", token)
   return url.toString()
 }

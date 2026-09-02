@@ -74,10 +74,12 @@ export function BookDetailDialog({
   const [loading, setLoading] = useState(false)
   const [memo, setMemo] = useState("")
   const [review, setReview] = useState("")
+  const [ratingDraft, setRatingDraft] = useState<number | null>(null)
   const [discardOpen, setDiscardOpen] = useState(false)
   const [leaveReviewOpen, setLeaveReviewOpen] = useState(false)
   const memoRef = useRef("")
   const reviewRef = useRef("")
+  const ratingDraftRef = useRef<number | null>(null)
   const liveRef = useRef<Book | null>(null)
 
   useEffect(() => {
@@ -117,18 +119,37 @@ export function BookDetailDialog({
   liveRef.current = live
   memoRef.current = memo
   reviewRef.current = review
+  ratingDraftRef.current = ratingDraft
 
   function isDirty() {
     const current = liveRef.current
     if (!current) return false
-    return memoRef.current !== (current.memo ?? "")
+    return (
+      memoRef.current !== (current.memo ?? "") ||
+      reviewRef.current !== (current.review ?? "") ||
+      (ratingDraftRef.current ?? null) !== (current.rating ?? null)
+    )
+  }
+
+  function saveDrafts() {
+    const current = liveRef.current
+    if (!current) return
+    const patch: Partial<Pick<Book, "memo" | "review" | "rating">> = {}
+    if (memoRef.current !== (current.memo ?? "")) {
+      patch.memo = memoRef.current
+    }
+    if (reviewRef.current !== (current.review ?? "")) {
+      patch.review = reviewRef.current
+    }
+    if ((ratingDraftRef.current ?? null) !== (current.rating ?? null)) {
+      patch.rating = ratingDraftRef.current
+    }
+    if (Object.keys(patch).length > 0) {
+      updateBook(current.id, patch)
+    }
   }
 
   function requestClose() {
-    const current = liveRef.current
-    if (current && reviewRef.current !== (current.review ?? "")) {
-      updateBook(current.id, { review: reviewRef.current })
-    }
     if (isDirty()) {
       setDiscardOpen(true)
       return
@@ -138,6 +159,12 @@ export function BookDetailDialog({
   }
 
   function discardAndClose() {
+    setDiscardOpen(false)
+    onOpenChange(false)
+  }
+
+  function saveAndClose() {
+    saveDrafts()
     setDiscardOpen(false)
     onOpenChange(false)
   }
@@ -170,6 +197,7 @@ export function BookDetailDialog({
     if (!open) {
       setMemo("")
       setReview("")
+      setRatingDraft(null)
       setDiscardOpen(false)
       setLeaveReviewOpen(false)
       return
@@ -177,6 +205,7 @@ export function BookDetailDialog({
     if (!live) return
     setMemo(live.memo ?? "")
     setReview(live.review ?? "")
+    setRatingDraft(live.rating ?? null)
     setDiscardOpen(false)
     setLeaveReviewOpen(false)
   }, [open, live?.id])
@@ -190,25 +219,18 @@ export function BookDetailDialog({
   const addedAt = formatAddedAt(live.addedAt)
   const selectedCategories = live.categoryIds ?? []
   const status = readingStatusOf(live)
-  const rating = live.rating ?? 0
-  const dirty = memo !== (live.memo ?? "")
+  const rating = ratingDraft ?? 0
+  const memoDirty = memo !== (live.memo ?? "")
+  const reviewDirty =
+    review !== (live.review ?? "") || (ratingDraft ?? null) !== (live.rating ?? null)
 
   function hasReviewData() {
-    const current = liveRef.current
-    const ratingValue = current?.rating ?? 0
-    return Boolean(reviewRef.current.trim() || ratingValue > 0)
-  }
-
-  function persistReview() {
-    if (review !== (live.review ?? "")) {
-      updateBook(live.id, { review })
-    }
+    return Boolean(reviewRef.current.trim() || (ratingDraftRef.current ?? 0) > 0)
   }
 
   function cycleStatus() {
     const next = nextReadingStatus(status)
     if (status === "done" && next !== "done" && hasReviewData()) {
-      persistReview()
       setLeaveReviewOpen(true)
       return
     }
@@ -223,12 +245,18 @@ export function BookDetailDialog({
       rating: null,
     })
     setReview("")
+    setRatingDraft(null)
     setLeaveReviewOpen(false)
   }
 
   function saveMemo() {
-    if (!dirty) return
+    if (!memoDirty) return
     updateBook(live.id, { memo })
+  }
+
+  function saveReview() {
+    if (!reviewDirty) return
+    updateBook(live.id, { review, rating: ratingDraft })
   }
 
   return createPortal(
@@ -368,9 +396,7 @@ export function BookDetailDialog({
                       aria-pressed={on}
                       className="p-0.5"
                       onClick={() =>
-                        updateBook(live.id, {
-                          rating: rating === value ? null : value,
-                        })
+                        setRatingDraft(rating === value ? null : value)
                       }
                     >
                       <Star
@@ -386,10 +412,20 @@ export function BookDetailDialog({
               <Textarea
                 value={review}
                 onChange={(event) => setReview(event.target.value)}
-                onBlur={persistReview}
                 placeholder="이 책을 읽고 남기고 싶은 감상"
                 className="no-scrollbar min-h-24 resize-none rounded-[8px] bg-[color-mix(in_srgb,var(--wood)_8%,transparent)]"
               />
+              <div className="flex justify-end">
+                <Button
+                  type="button"
+                  size="sm"
+                  className="h-8 rounded-full px-3 text-xs"
+                  disabled={!reviewDirty}
+                  onClick={saveReview}
+                >
+                  저장
+                </Button>
+              </div>
             </div>
           ) : null}
 
@@ -406,7 +442,7 @@ export function BookDetailDialog({
                 type="button"
                 size="sm"
                 className="h-8 rounded-full px-3 text-xs"
-                disabled={!dirty}
+                disabled={!memoDirty}
                 onClick={saveMemo}
               >
                 저장
@@ -452,10 +488,10 @@ export function BookDetailDialog({
             className="relative z-10 w-full max-w-xs rounded-[24px] bg-[var(--card)] p-5 text-[var(--card-foreground)] shadow-[0_18px_40px_rgba(59,36,20,0.22)]"
           >
             <p id="leave-review-title" className="font-medium">
-              감상평을 지울까요?
+              책을 아직 덜 읽으셨나요?
             </p>
             <p className="mt-1 text-sm text-muted-foreground">
-              완독이 아니면 별점과 감상평이 삭제됩니다.
+              변경 시 감상평이 삭제됩니다.
             </p>
             <div className="mt-4 grid grid-cols-2 gap-2">
               <Button
@@ -492,26 +528,26 @@ export function BookDetailDialog({
             className="relative z-10 w-full max-w-xs rounded-[24px] bg-[var(--card)] p-5 text-[var(--card-foreground)] shadow-[0_18px_40px_rgba(59,36,20,0.22)]"
           >
             <p id="discard-title" className="font-medium">
-              저장하지 않고 닫을까요?
+              저장하시겠습니까?
             </p>
             <p className="mt-1 text-sm text-muted-foreground">
-              메모 변경이 저장되지 않습니다.
+              저장하지 않으면 변경 내용이 사라집니다.
             </p>
             <div className="mt-4 grid grid-cols-2 gap-2">
               <Button
                 type="button"
                 variant="outline"
                 className="h-11 rounded-2xl"
-                onClick={() => setDiscardOpen(false)}
+                onClick={discardAndClose}
               >
-                취소
+                저장 안 함
               </Button>
               <Button
                 type="button"
                 className="h-11 rounded-2xl"
-                onClick={discardAndClose}
+                onClick={saveAndClose}
               >
-                닫기
+                저장
               </Button>
             </div>
           </div>
