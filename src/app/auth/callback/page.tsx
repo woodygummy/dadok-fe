@@ -16,7 +16,7 @@ const ERROR_COPY: Record<string, string> = {
 function AuthCallbackInner() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { completeOAuth } = useDadok()
+  const { completeOAuth, session } = useDadok()
   const [message, setMessage] = useState("서재 문을 여는 중…")
 
   useEffect(() => {
@@ -31,9 +31,9 @@ function AuthCallbackInner() {
       return
     }
     completeOAuth(token)
-      .then(() => router.replace("/"))
+      .then(() => router.replace(session ? "/me/account" : "/"))
       .catch(() => setMessage("로그인 정보를 확인하지 못했습니다."))
-  }, [completeOAuth, router, searchParams])
+  }, [completeOAuth, router, searchParams, session])
 
   const failed = message !== "서재 문을 여는 중…"
 

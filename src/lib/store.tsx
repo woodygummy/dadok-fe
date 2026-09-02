@@ -7,7 +7,7 @@ import {
   useMemo,
   useSyncExternalStore,
 } from "react"
-import { fetchMe, loginAccount, registerAccount } from "@/lib/auth-api"
+import { fetchMe, loginAccount, registerAccount, updateLoginId } from "@/lib/auth-api"
 import { capturePreviewState, isCapturePreview } from "@/lib/capture-preview"
 import { applyTheme } from "@/lib/theme"
 import {
@@ -19,7 +19,32 @@ import {
   saveState,
   saveToken,
 } from "@/lib/storage"
-import { BOOK_LIMIT, CATEGORY_LIMIT, CATEGORY_NAME_MAX, readingStatusOf, type Book, type BookCategory, type DadokState, type ReadingStatus, type ThemeName } from "@/lib/types"
+import {
+  BOOK_LIMIT,
+  CATEGORY_LIMIT,
+  CATEGORY_NAME_MAX,
+  DEFAULT_PROFILE,
+  readingStatusOf,
+  type Book,
+  type BookCategory,
+  type DadokState,
+  type ReadingStatus,
+  type ThemeName,
+} from "@/lib/types"
+
+function profileFromUser(
+  saved: DadokState["profile"],
+  user: NonNullable<DadokState["session"]>["user"]
+) {
+  const savedNickname = saved.nickname.trim()
+  const useSavedNickname =
+    savedNickname !== "" && savedNickname !== DEFAULT_PROFILE.nickname
+  return {
+    ...saved,
+    nickname: useSavedNickname ? savedNickname : user.nickname || savedNickname,
+    email: user.email || saved.email,
+  }
+}
 
 type AddBookInput = {
   googleId: string
@@ -54,6 +79,7 @@ type StoreValue = {
   addCategory: (name: string) => BookCategory | null
   removeCategory: (id: string) => void
   setNickname: (nickname: string) => void
+  setLoginId: (loginId: string) => Promise<void>
   setTheme: (theme: ThemeName) => void
   setAvatar: (avatarUrl: string | null) => void
   logout: () => void
@@ -95,11 +121,7 @@ async function applySession(token: string, user: NonNullable<DadokState["session
   commit({
     books: saved.books,
     categories: saved.categories,
-    profile: {
-      ...saved.profile,
-      nickname: saved.profile.nickname || user.nickname,
-      email: user.email || saved.profile.email,
-    },
+    profile: profileFromUser(saved.profile, user),
     session: { token, user },
   })
 }
@@ -138,11 +160,7 @@ export function DadokProvider({ children }: { children: React.ReactNode }) {
     const user = await fetchMe(token)
     commit({
       ...snapshot,
-      profile: {
-        ...snapshot.profile,
-        email: user.email || snapshot.profile.email,
-        nickname: snapshot.profile.nickname || user.nickname,
-      },
+      profile: profileFromUser(snapshot.profile, user),
       session: { token, user },
     })
   }, [])
@@ -261,6 +279,21 @@ export function DadokProvider({ children }: { children: React.ReactNode }) {
     })
   }, [])
 
+  const setLoginId = useCallback(async (loginId: string) => {
+    const token = snapshot.session?.token
+    const current = snapshot.session?.user
+    if (!token || !current) {
+      throw new Error("로그인이 필요합니다.")
+    }
+    const result = await updateLoginId(token, loginId)
+    saveToken(result.token)
+    commit({
+      ...snapshot,
+      profile: profileFromUser(snapshot.profile, result.user),
+      session: { token: result.token, user: result.user },
+    })
+  }, [])
+
   const setTheme = useCallback((theme: ThemeName) => {
     commit({
       ...snapshot,
@@ -299,6 +332,7 @@ export function DadokProvider({ children }: { children: React.ReactNode }) {
       addCategory,
       removeCategory,
       setNickname,
+      setLoginId,
       setTheme,
       setAvatar,
       logout,
@@ -319,6 +353,7 @@ export function DadokProvider({ children }: { children: React.ReactNode }) {
       addCategory,
       removeCategory,
       setNickname,
+      setLoginId,
       setTheme,
       setAvatar,
       logout,
@@ -350,11 +385,7 @@ export async function hydrateDadokStore() {
     snapshot = {
       books: saved.books,
       categories: saved.categories,
-      profile: {
-        ...saved.profile,
-        nickname: saved.profile.nickname || user.nickname,
-        email: user.email || saved.profile.email,
-      },
+      profile: profileFromUser(saved.profile, user),
       session: { token, user },
     }
   } catch {

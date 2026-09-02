@@ -6,6 +6,8 @@ import { Pencil } from "lucide-react"
 import { BackLink } from "@/components/back-link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { AuthError } from "@/lib/auth-api"
+import { loginIdError as loginIdFieldError } from "@/lib/auth-validate"
 import { SocialAuthButtons } from "@/components/social-auth-buttons"
 import { readAvatarFile } from "@/lib/read-avatar"
 import { useDadok } from "@/lib/store"
@@ -20,13 +22,23 @@ const PROVIDER_NAME: Record<Provider, string> = {
 const PROVIDER_ORDER: Provider[] = ["kakao", "google", "naver"]
 
 export default function AccountPage() {
-  const { profile, session, setNickname, setAvatar, logout } = useDadok()
+  const { profile, session, setNickname, setLoginId, setAvatar, logout, refreshUser } = useDadok()
   const router = useRouter()
   const [nickname, setNicknameDraft] = useState(profile.nickname)
+  const [loginIdDraft, setLoginIdDraft] = useState(session?.user.loginId ?? "")
+  const [loginIdMessage, setLoginIdMessage] = useState("")
 
   useEffect(() => {
     setNicknameDraft(profile.nickname)
   }, [profile.nickname])
+
+  useEffect(() => {
+    setLoginIdDraft(session?.user.loginId ?? "")
+  }, [session?.user.loginId])
+
+  useEffect(() => {
+    void refreshUser()
+  }, [refreshUser])
 
   function saveNickname() {
     if (!nickname.trim()) {
@@ -34,6 +46,30 @@ export default function AccountPage() {
       return
     }
     setNickname(nickname)
+  }
+
+  async function saveLoginId() {
+    const next = loginIdDraft.trim()
+    if (!next || next === loginId) {
+      setLoginIdDraft(loginId)
+      setLoginIdMessage("")
+      return
+    }
+    const invalid = loginIdFieldError(next)
+    if (invalid) {
+      setLoginIdMessage(invalid)
+      setLoginIdDraft(loginId)
+      return
+    }
+    try {
+      await setLoginId(next)
+      setLoginIdMessage("")
+    } catch (err) {
+      setLoginIdDraft(loginId)
+      setLoginIdMessage(
+        err instanceof AuthError ? err.message : "아이디를 바꾸지 못했습니다."
+      )
+    }
   }
 
   async function handleAvatarChange(event: ChangeEvent<HTMLInputElement>) {
@@ -50,7 +86,10 @@ export default function AccountPage() {
   const initial = profile.nickname.trim().slice(0, 1) || "다"
   const linked = session?.user.providers ?? []
   const loginId = session?.user.loginId ?? ""
-  const emailLabel = profile.email || (session?.user.hasPassword ? "" : "소셜 가입")
+  const emailLabel =
+    session?.user.email ||
+    profile.email ||
+    (session?.user.hasPassword ? "" : "소셜 가입")
 
   return (
     <div className="space-y-6">
@@ -96,9 +135,30 @@ export default function AccountPage() {
 
       <div className="mx-auto w-full max-w-[17.75rem] space-y-6">
       <section className="sketch-frame rounded-[18px] bg-[var(--niche)]">
-        <div className="flex items-center justify-between gap-3 px-4 pt-5 pb-3.5">
-          <h2 className="shrink-0 text-sm font-medium">아이디</h2>
-          <p className="min-w-0 truncate text-right text-sm text-muted-foreground">{loginId}</p>
+        <div className="px-4 pt-5 pb-3.5">
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="shrink-0 text-sm font-medium">아이디</h2>
+            <Input
+              value={loginIdDraft}
+              onChange={(event) => {
+                setLoginIdDraft(event.target.value)
+                setLoginIdMessage("")
+              }}
+              onBlur={() => void saveLoginId()}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") {
+                  event.currentTarget.blur()
+                }
+              }}
+              maxLength={20}
+              aria-label="아이디"
+              aria-invalid={Boolean(loginIdMessage) || undefined}
+              className="h-8 min-w-0 max-w-[10rem] border-0 bg-transparent px-0 text-right text-sm text-muted-foreground shadow-none focus-visible:ring-0"
+            />
+          </div>
+          {loginIdMessage ? (
+            <p className="mt-1 text-right text-xs text-[var(--destructive)]">{loginIdMessage}</p>
+          ) : null}
         </div>
         <div className="sketch-line mx-4" />
         <div className="flex items-center justify-between gap-3 px-4 py-3.5">

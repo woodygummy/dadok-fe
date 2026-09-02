@@ -1,4 +1,4 @@
-import type { AuthUser, Provider } from "@/lib/types"
+import { isProvider, type AuthUser, type Provider } from "@/lib/types"
 
 function trimOrigin(value?: string) {
   return value?.replace(/\/$/, "") || ""
@@ -95,7 +95,27 @@ export async function fetchMe(token: string): Promise<AuthUser> {
     throw new AuthError(await readError(response), response.status)
   }
   const data = (await response.json()) as { user: AuthUser }
-  return data.user
+  return {
+    ...data.user,
+    providers: Array.isArray(data.user.providers)
+      ? data.user.providers.filter(isProvider)
+      : [],
+  }
+}
+
+export async function updateLoginId(
+  token: string,
+  loginId: string
+): Promise<AuthResponse> {
+  const response = await request("/auth/me", {
+    method: "PATCH",
+    headers: { Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ loginId }),
+  })
+  if (!response.ok) {
+    throw new AuthError(await readError(response), response.status)
+  }
+  return (await response.json()) as AuthResponse
 }
 
 export function oauthStartUrl(provider: Provider, token?: string) {

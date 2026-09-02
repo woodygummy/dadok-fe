@@ -2,6 +2,10 @@ export type ThemeName = "white" | "dark" | "wood"
 
 export type Provider = "kakao" | "google" | "naver"
 
+export function isProvider(value: unknown): value is Provider {
+  return value === "kakao" || value === "google" || value === "naver"
+}
+
 export type AuthUser = {
   id: string
   loginId: string
